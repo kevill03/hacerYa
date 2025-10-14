@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="shortcut icon" href="images/task-list.svg" type="image/x-icon" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/style.css" />
+    <title>Workspace</title>
+  </head>
+  <body>
+    <div class="flexContainer homeContainer">
+      <div class="sideBarContainer flexContainer">
+        <nav class="sideBarButtons flexContainer">
+          <a href="#" class="flexContainer logoContainer">
+            <img
+              class="logoImg"
+              src="images/whitelogoHacerya.png"
+              alt="Logo de HacerYa"
+            />
+          </a>
+
+          <a
+            href="#mis-proyectos"
+            class="sideBarBtn flexContainer"
+            role="button"
+          >
+            Mis Proyectos
+          </a>
+
+          <a
+            href="#workspaces"
+            class="sideBarBtn flexContainer active"
+            role="button"
+          >
+            Workspaces
+          </a>
+
+          <a
+            href="#admin-dashboard"
+            class="sideBarBtn flexContainer admin-link-hidden"
+            role="button"
+          >
+            Estadísticas y Reportes
+          </a>
+        </nav>
+        <div class="footerSideBar flexContainer">
+          <button class="btn logoutBtn">Cerrar Sesión</button>
+        </div>
+      </div>
+      <div class="mainPanel flexContainer">
+        <div class="topNav flexContainer">
+          <div class="leftSideTopNav flexContainer">
+            <h1 class="subtitle">UBA's Workspace</h1>
+          </div>
+          <div class="flexContainer topNavButtons">
+            <button class="panelBtn flexContainer" type="button">
+              Crear Proyecto
+              <img
+                src="images/addImage.png"
+                alt="boton añadir"
+                class="actionIcon"
+              />
+            </button>
+            <button class="panelBtn flexContainer" type="button">
+              Alternar Vista
+              <img
+                src="images/display grid button.png"
+                alt="boton alternar vista"
+                class="actionIcon"
+              />
+            </button>
+          </div>
+        </div>
+        <div class="data flexContainer">
+          <h2>Pagina en Construcción!</h2>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="scripts/worskpace.js"></script>
+</html>

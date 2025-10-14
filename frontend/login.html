@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="shortcut icon" href="images/task-list.svg" type="image/x-icon" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/style.css" />
+    <title>Iniciar Sesión</title>
+  </head>
+  <body class="flexContainer loginBody">
+    <div class="loginGrid gridContainer">
+      <header>
+        <nav class="header flexContainer">
+          <div class="headerLeft">
+            <a href="index.html"
+              ><img
+                class="logoLandingPage"
+                src="images/logo HacerYA.png"
+                alt=""
+            /></a>
+          </div>
+        </nav>
+      </header>
+      <main class="flexContainer loginMain">
+        <div class="flexContainer loginContainer">
+          <h1 class="subtitle">
+            Comienza a <span class="logo">HacerYA</span>!
+          </h1>
+          <p class="text">Inicia Sesión para continuar</p>
+          <form action="#" method="post" class="loginForm flexContainer">
+            <div class="inputGroup flexContainer">
+              <label for="emailUser" class="visually-hidden"
+                >Correo Electrónico</label
+              >
+              <input
+                type="email"
+                name="emailUser"
+                id="emailUser"
+                placeholder="Ingrese su email"
+                required
+              />
+            </div>
+
+            <div class="inputGroup flexContainer">
+              <label for="passwordUser" class="visually-hidden"
+                >Contraseña</label
+              >
+              <input
+                type="password"
+                name="passwordUser"
+                id="passwordUser"
+                placeholder="Ingrese su clave"
+                required
+              />
+            </div>
+
+            <button type="button" class="btn loginBtn">Continuar</button>
+          </form>
+          <ul class="flexContainer footerList">
+            <li><a href="#">Olvidé mi contraseña</a></li>
+            <li><a href="#">Crear una cuenta</a></li>
+          </ul>
+        </div>
+      </main>
+      <footer>
+        <img
+          src="images/Kanban-board-min.jpg"
+          alt="imagen de un tablero organizacional"
+          class="footerImg"
+        />
+      </footer>
+    </div>
+  </body>
+  <script type="module" src="scripts/login.js"></script>
+</html>
