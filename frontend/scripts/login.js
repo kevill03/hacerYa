@@ -24,7 +24,7 @@ document.querySelector(".loginBtn").addEventListener("click", async () => {
 
     if (response.ok) {
       localStorage.setItem("user", JSON.stringify(data));
-      window.location.href = "workspaceFront.html";
+      window.location.href = "mainPage.html";
     } else {
       alert(data.message || "Credenciales inválidas");
     }

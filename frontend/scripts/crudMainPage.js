@@ -3,10 +3,11 @@
 const modal = document.querySelector(".createProjectWindow");
 const overlay = document.querySelector(".overlay");
 const btnCloseWindow = document.querySelector(".closeWindow");
-const btnsOpenWindow = document.querySelector("#createProjectNav");
+const btnsMainAction = document.querySelectorAll(".mainActionBtn"); // Colección de botones a actualizar
+const btnChangeView = document.querySelectorAll(".changeViewNav");
 const mainContentArea = document.querySelector(".mainData");
 const sideBarButtons = document.querySelectorAll(".sideBarBtn");
-console.log(btnsOpenWindow);
+
 const openWindow = function () {
   modal.classList.remove("hidden");
   overlay.classList.remove("hidden");
@@ -17,48 +18,58 @@ const closeWindow = function () {
   overlay.classList.add("hidden");
 };
 
-btnsOpenWindow.addEventListener("click", openWindow);
+const changeView = function () {
+  // 1. Alterna 'flexContainer'
+  mainContentArea.classList.toggle("flexContainer");
+
+  // 2. Alterna 'gridContainer'
+  mainContentArea.classList.toggle("gridContainer");
+};
+
+// Event Listeners base
+// Se asume que btnsOpenWindow es un elemento que ahora es parte de btnsMainAction (o se ignora)
+// Lo quitamos para aplicar un listener dinámico más adelante
 
 btnCloseWindow.addEventListener("click", closeWindow);
 overlay.addEventListener("click", closeWindow);
-
 document.addEventListener("keydown", function (e) {
-  // console.log(e.key);
-
   if (e.key === "Escape" && !modal.classList.contains("hidden")) {
     closeWindow();
   }
+});
+btnChangeView.forEach((btn) => {
+  btn.addEventListener("click", changeView);
 });
 
 // Logica de routing
 // 2. Definir el HTML para cada vista
 const getProjectsHTML = () => {
-  // Retorna el HTML COMPLETO de la vista "Mis Proyectos"
   return `
         <div class="projects-view">
             <h2>Vista de Mis Proyectos 📋</h2>
             <p>Aquí se cargará la lista de proyectos desde la base de datos.</p>
-            </div>
+        </div>
     `;
 };
 
 const getWorkspacesHTML = () => {
-  // Retorna el HTML COMPLETO de la vista "Workspaces"
   return `
         <div class="workspaces-view">
             <h2>Vista de Workspaces 💼</h2>
             <p>Aquí se listarán todos tus espacios de trabajo.</p>
-            </div>
+        </div>
     `;
 };
+
 const getStatsHTML = function () {
   return `
-          <div class="admin-view">
+        <div class="admin-view">
             <h2>Vista del Administrador 👮‍♂️</h2>
             <p>Aquí se listarán todas las estadisticas extraídas a partir de los projectos.</p>
-            </div>
+        </div>
     `;
 };
+
 // 3. Función principal para cambiar la vista
 const renderView = (viewName) => {
   // Primero, limpia el contenido actual
@@ -66,25 +77,39 @@ const renderView = (viewName) => {
 
   let newHTML = "";
   let newTitle = "";
+  let newButtonText = "";
+  let newButtonAction = "";
+  let newButtonIconSrc = "";
+  let isVisible = true; // Control de visibilidad del botón de acción
 
   // Selecciona el HTML a inyectar según la vista
   switch (viewName) {
     case "mis-proyectos":
       newHTML = getProjectsHTML();
       newTitle = "Mis Proyectos";
+      newButtonText = "Crear Proyecto";
+      newButtonAction = "openProjectModal";
+      newButtonIconSrc = "images/addImage.png";
       break;
     case "workspaces":
       newHTML = getWorkspacesHTML();
       newTitle = "Workspaces";
+      newButtonText = "Crear Workspace";
+      newButtonAction = "openWorkspaceModal";
+      newButtonIconSrc = "images/workspacesLogo.png";
       break;
-    // Agrega más casos (ej: 'admin-dashboard')
     case "admin-dashboard":
       newHTML = getStatsHTML();
       newTitle = "Estadisticas y Reportes";
+      newButtonText = "Generar Reporte";
+      newButtonAction = "generateReport";
+      newButtonIconSrc = "images/reportLogo.png";
       break;
     default:
       newHTML = "<h2>Vista no encontrada.</h2>";
       newTitle = "Error";
+      newButtonIconSrc = "images/addImage.png";
+      isVisible = true;
   }
 
   // Inyecta el nuevo HTML
@@ -101,6 +126,26 @@ const renderView = (viewName) => {
       btn.classList.add("active");
     }
   });
+
+  // ----------------------------------------------------
+  // 👇 CAMBIO: Implementación del forEach para los botones de acción
+  // ----------------------------------------------------
+  if (btnsMainAction.length > 0) {
+    btnsMainAction.forEach((button) => {
+      // 1. Cambia el contenido interno (texto + ícono)
+      button.innerHTML = `
+                ${newButtonText} 
+                <img src="${newButtonIconSrc}" alt="boton añadir" class="actionIcon"/>
+            `;
+
+      // 2. Cambia el atributo de datos para que el listener sepa qué hacer
+      button.setAttribute("data-action", newButtonAction);
+
+      // 3. Controla la visibilidad
+      button.style.display = isVisible ? "flex" : "none";
+    });
+  }
+  // ----------------------------------------------------
 };
 
 // 4. Lógica para escuchar los clicks en el sidebar
@@ -109,7 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const initialHash = window.location.hash.replace("#", "");
 
   // Define la variable que contendrá el nombre de la vista.
-  // Si la URL está vacía, usa 'mis-proyectos'.
   const viewToLoad = initialHash || "mis-proyectos";
 
   // 2. Renderiza la vista inicial
@@ -117,24 +161,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 3. Corrige la URL en la barra de navegación si el usuario entró sin hash.
   if (!initialHash) {
-    // Ahora 'viewToLoad' está definida y contiene "mis-proyectos"
     window.history.pushState(null, "", "#" + viewToLoad);
   }
 
   // ----------------------------------------------------
+  // 👇 CAMBIO: Listener para los botones de acción principal
+  // ----------------------------------------------------
+  btnsMainAction.forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.getAttribute("data-action");
 
-  // Escuchar clicks en el sidebar
+      // Asumimos que "openProjectModal" y "openWorkspaceModal" deben abrir el modal
+      if (action === "openProjectModal" || action === "openWorkspaceModal") {
+        openWindow();
+      } else if (action === "generateReport") {
+        // Lógica de reportes si es necesario, por ahora solo un log
+        console.log("Iniciando generación de reporte...");
+      }
+    });
+  });
+  // ----------------------------------------------------
+
+  // Escuchar clicks en el sidebar (Routing)
   sideBarButtons.forEach((button) => {
     button.addEventListener("click", (e) => {
-      e.preventDefault(); // Detiene el comportamiento predeterminado del link
-
-      // Obtiene el nombre de la vista
+      e.preventDefault();
       const viewName = e.currentTarget.getAttribute("href").replace("#", "");
 
-      // Cambia el contenido
       renderView(viewName);
-
-      // Actualiza la URL
       window.history.pushState(null, "", "#" + viewName);
     });
   });

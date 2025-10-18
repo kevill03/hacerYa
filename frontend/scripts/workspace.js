@@ -3,10 +3,10 @@ const logoutBtn = document.querySelector(".logoutBtn");
 window.addEventListener("load", () => {
   const userData = localStorage.getItem("user");
 
-  if (!userData) {
+  /*if (!userData) {
     window.location.href = "login.html";
     return;
-  }
+  }*/
 
   const stored = JSON.parse(userData);
   const user = stored.user;
