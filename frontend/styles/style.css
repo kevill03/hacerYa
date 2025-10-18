@@ -316,7 +316,6 @@ a.flexContainer {
 .sideBarContainer {
   flex-direction: column;
   background-color: rgb(159, 110, 206);
-  flex-grow: 1;
   box-shadow: 5px 0 5px rgba(0, 0, 0, 0.1);
   padding: 20px 0;
   flex-shrink: 0;
@@ -388,10 +387,11 @@ a.flexContainer {
   cursor: pointer;
   transform: scale(1.05);
 }
-.admin-link-hidden {
+.admin-link-hidden,
+.hidden {
   display: none;
 }
-.data {
+.mainData {
   align-items: center;
   justify-content: center;
   width: 100%;
@@ -416,4 +416,57 @@ a.flexContainer {
   color: white;
   cursor: pointer;
   background-color: red;
+}
+.createProjectWindow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+
+  background-color: white;
+  padding: 6rem;
+  border-radius: 5px;
+  box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 5;
+}
+.closeWindow {
+  position: absolute;
+  top: 1.2rem;
+  right: 2rem;
+  font-size: 3.5rem;
+  color: #333;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+.createProjectForm {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.createProjectForm input:focus,
+.createProjectForm textarea:focus {
+  outline: none;
+  border-color: #b863f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+.createProjectForm input,
+.createProjectForm textarea {
+  width: 100%;
+  margin: 1px;
+  border: #333 solid 2px;
+  border-radius: 5px;
+  padding: 5px;
 }

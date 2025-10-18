@@ -1,9 +1,5 @@
 const logoutBtn = document.querySelector(".logoutBtn");
 
-if (!localStorage.getItem("user")) {
-  window.location.replace("login.html");
-}
-
 window.addEventListener("load", () => {
   const userData = localStorage.getItem("user");
 

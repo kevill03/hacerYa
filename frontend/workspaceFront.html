@@ -17,26 +17,28 @@
     <div class="flexContainer homeContainer">
       <div class="sideBarContainer flexContainer">
         <nav class="sideBarButtons flexContainer">
-          <a href="#" class="flexContainer logoContainer">
+          <div class="flexContainer logoContainer">
             <img
               class="logoImg"
               src="images/whitelogoHacerya.png"
               alt="Logo de HacerYa"
             />
-          </a>
+          </div>
 
           <a
             href="#mis-proyectos"
-            class="sideBarBtn flexContainer"
+            class="sideBarBtn flexContainer active"
             role="button"
+            id="btnProjectos"
           >
             Mis Proyectos
           </a>
 
           <a
             href="#workspaces"
-            class="sideBarBtn flexContainer active"
+            class="sideBarBtn flexContainer"
             role="button"
+            id="btnWorkspaces"
           >
             Workspaces
           </a>
@@ -56,10 +58,10 @@
       <div class="mainPanel flexContainer">
         <div class="topNav flexContainer">
           <div class="leftSideTopNav flexContainer">
-            <h1 class="subtitle">UBA's Workspace</h1>
+            <h1 class="subtitle">Mis Projectos</h1>
           </div>
           <div class="flexContainer topNavButtons">
-            <button class="panelBtn flexContainer" type="button">
+            <button id="createProjectNav" class="panelBtn flexContainer" type="button">
               Crear Proyecto
               <img
                 src="images/addImage.png"
@@ -77,11 +79,47 @@
             </button>
           </div>
         </div>
-        <div class="data flexContainer">
+        <div class="mainData flexContainer">
           <h2>Pagina en Construcción!</h2>
         </div>
       </div>
     </div>
+    <div class="createProjectWindow hidden">
+      <button class="closeWindow">&times;</button>
+      <h1>Crea tu Proyecto</h1>
+          <form action="#" method="post" class="createProjectForm flexContainer">
+            <div class="inputGroup flexContainer">
+              <label for="projectTitle" class="visually-hidden"
+                >Titulo del Projecto</label
+              >
+              <input
+                type="text"
+                name="projectTitle"
+                id="projectTitle"
+                placeholder="Ingrese el título de su projecto"
+                required
+              />
+            </div>
+
+            <div class="inputGroup flexContainer">
+              <label for="projectDescription" class="visually-hidden"
+                >Contraseña</label
+              >
+              <textarea name="projectDescription" id="projectDescription"  placeholder="Ingrese una breve descripción de su projecto"></textarea>
+            </div>
+                             <button class="btn createProjectBtn flexContainer" type="button">
+              Crear Proyecto
+              <img
+                src="images/addImage.png"
+                alt="boton añadir"
+                class="actionIcon"
+              />
+          </form>
+
+    </div>
+    <div class="overlay hidden"></div>
   </body>
   <script src="scripts/worskpace.js"></script>
+  <script src="scripts/crudProject.js"></script>
 </html>
+
