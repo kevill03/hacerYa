@@ -61,7 +61,7 @@
             <h1 class="subtitle">Mis Projectos</h1>
           </div>
           <div class="flexContainer topNavButtons">
-            <button id="createProjectNav" class="panelBtn flexContainer mainActionBtn" type="button">
+            <button id="createNavButton" class="panelBtn flexContainer mainActionBtn" type="button">
               Crear Proyecto
               <img
                 src="images/addImage.png"
@@ -71,7 +71,7 @@
             </button>
             <button class="panelBtn flexContainer changeViewNav" type="button">
               Alternar Vista
-              <img
+              <img id="changeViewLogo"
                 src="images/display grid button.png"
                 alt="boton alternar vista"
                 class="actionIcon"
@@ -80,34 +80,33 @@
           </div>
         </div>
         <div class="mainData flexContainer">
-          <h2>Pagina en Construcción!</h2>
         </div>
       </div>
     </div>
-    <div class="createProjectWindow hidden">
+    <div class="createWindow hidden">
       <button class="closeWindow">&times;</button>
-      <h1>Crea tu Proyecto</h1>
-          <form action="#" method="post" class="createProjectForm flexContainer">
+      <h1 id="formTitle">Crea tu Proyecto</h1>
+          <form action="#" method="post" class="createActionForm flexContainer">
             <div class="inputGroup flexContainer">
-              <label for="projectTitle" class="visually-hidden"
+              <label for="inputTitle" class="visually-hidden"
                 >Titulo del Projecto</label
               >
               <input
                 type="text"
-                name="projectTitle"
-                id="projectTitle"
-                placeholder="Ingrese el título de su projecto"
+                name="inputTitle"
+                id="inputTitle"
+                placeholder="Ingrese el título de su proyecto"
                 required
               />
             </div>
 
             <div class="inputGroup flexContainer">
-              <label for="projectDescription" class="visually-hidden"
+              <label for="inputDescription" class="visually-hidden"
                 >Contraseña</label
               >
-              <textarea name="projectDescription" id="projectDescription"  placeholder="Ingrese una breve descripción de su projecto"></textarea>
+              <textarea name="inputDescription" id="inputDescription"  placeholder="Ingrese una breve descripción de su proyecto"></textarea>
             </div>
-                <button class="btn createProjectBtn flexContainer mainActionBtn" type="button">
+                <button class="btn flexContainer mainActionBtn" type="button">
               Crear Proyecto
               <img
                 src="images/addImage.png"

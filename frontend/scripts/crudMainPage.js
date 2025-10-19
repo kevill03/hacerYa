@@ -1,13 +1,16 @@
 "use strict";
 
-const modal = document.querySelector(".createProjectWindow");
+const modal = document.querySelector(".createWindow");
 const overlay = document.querySelector(".overlay");
 const btnCloseWindow = document.querySelector(".closeWindow");
 const btnsMainAction = document.querySelectorAll(".mainActionBtn"); // Colección de botones a actualizar
 const btnChangeView = document.querySelectorAll(".changeViewNav");
+const changeViewLogo = document.getElementById("changeViewLogo");
+const formTitle = document.getElementById("formTitle");
+const inputTitle = document.getElementById("inputTitle");
+const inputDescription = document.getElementById("inputDescription");
 const mainContentArea = document.querySelector(".mainData");
 const sideBarButtons = document.querySelectorAll(".sideBarBtn");
-
 const openWindow = function () {
   modal.classList.remove("hidden");
   overlay.classList.remove("hidden");
@@ -24,11 +27,17 @@ const changeView = function () {
 
   // 2. Alterna 'gridContainer'
   mainContentArea.classList.toggle("gridContainer");
+  changeViewLogo.setAttribute(
+    "src",
+    `${
+      mainContentArea.classList.contains("gridContainer")
+        ? "images/display list.png"
+        : "images/display grid button.png"
+    }`
+  );
 };
 
 // Event Listeners base
-// Se asume que btnsOpenWindow es un elemento que ahora es parte de btnsMainAction (o se ignora)
-// Lo quitamos para aplicar un listener dinámico más adelante
 
 btnCloseWindow.addEventListener("click", closeWindow);
 overlay.addEventListener("click", closeWindow);
@@ -80,6 +89,9 @@ const renderView = (viewName) => {
   let newButtonText = "";
   let newButtonAction = "";
   let newButtonIconSrc = "";
+  let newTitlePlaceholder = "";
+  let newDescriptionPlaceholder = "";
+  let newFormTitle = "";
   let isVisible = true; // Control de visibilidad del botón de acción
 
   // Selecciona el HTML a inyectar según la vista
@@ -90,6 +102,10 @@ const renderView = (viewName) => {
       newButtonText = "Crear Proyecto";
       newButtonAction = "openProjectModal";
       newButtonIconSrc = "images/addImage.png";
+      newTitlePlaceholder = "Ingrese el título de su proyecto";
+      newDescriptionPlaceholder =
+        "Ingrese una breve descripción de su projecto";
+      newFormTitle = "Crea Un Nuevo Proyecto";
       break;
     case "workspaces":
       newHTML = getWorkspacesHTML();
@@ -97,6 +113,9 @@ const renderView = (viewName) => {
       newButtonText = "Crear Workspace";
       newButtonAction = "openWorkspaceModal";
       newButtonIconSrc = "images/workspacesLogo.png";
+      newTitlePlaceholder = "Ingrese el título del Workspace";
+      newDescriptionPlaceholder = "Describa brevemente al Workspace";
+      newFormTitle = "Crea Un Nuevo Workspace";
       break;
     case "admin-dashboard":
       newHTML = getStatsHTML();
@@ -109,7 +128,7 @@ const renderView = (viewName) => {
       newHTML = "<h2>Vista no encontrada.</h2>";
       newTitle = "Error";
       newButtonIconSrc = "images/addImage.png";
-      isVisible = true;
+      isVisible = false;
   }
 
   // Inyecta el nuevo HTML
@@ -126,7 +145,9 @@ const renderView = (viewName) => {
       btn.classList.add("active");
     }
   });
-
+  inputTitle.setAttribute("placeholder", newTitlePlaceholder);
+  inputDescription.setAttribute("placeholder", newDescriptionPlaceholder);
+  formTitle.textContent = newFormTitle;
   // ----------------------------------------------------
   // 👇 CAMBIO: Implementación del forEach para los botones de acción
   // ----------------------------------------------------
@@ -140,7 +161,6 @@ const renderView = (viewName) => {
 
       // 2. Cambia el atributo de datos para que el listener sepa qué hacer
       button.setAttribute("data-action", newButtonAction);
-
       // 3. Controla la visibilidad
       button.style.display = isVisible ? "flex" : "none";
     });

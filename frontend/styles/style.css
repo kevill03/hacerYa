@@ -198,6 +198,7 @@ main {
 .subtitle {
   font-size: 40px;
   font-weight: 600;
+  margin-left: 1rem;
 }
 
 .loginDescription > .descriptionText {
@@ -374,7 +375,8 @@ a.flexContainer {
   width: 100%;
   align-items: center;
 }
-.panelBtn {
+.panelBtn,
+.mainActionBtn {
   padding: 5px;
   margin: 10px;
   border-radius: 20px;
@@ -383,7 +385,8 @@ a.flexContainer {
   font-weight: 600;
   transition: all 0.2s;
 }
-.panelBtn:hover {
+.panelBtn:hover,
+.mainActionBtn:hover {
   cursor: pointer;
   transform: scale(1.05);
 }
@@ -417,7 +420,7 @@ a.flexContainer {
   cursor: pointer;
   background-color: red;
 }
-.createProjectWindow {
+.createWindow {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -425,7 +428,7 @@ a.flexContainer {
   width: 50%;
 
   background-color: white;
-  padding: 6rem;
+  padding: 5rem;
   border-radius: 5px;
   box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
   z-index: 10;
@@ -451,22 +454,25 @@ a.flexContainer {
   border: none;
   background: none;
 }
-.createProjectForm {
+.createActionForm {
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.createProjectForm input:focus,
-.createProjectForm textarea:focus {
+.createActionForm input:focus,
+.createActionForm textarea:focus {
   outline: none;
   border-color: #b863f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
-.createProjectForm input,
-.createProjectForm textarea {
+.createActionForm input,
+.createActionForm textarea {
   width: 100%;
   margin: 1px;
   border: #333 solid 2px;
   border-radius: 5px;
   padding: 5px;
+}
+#formTitle {
+  margin-bottom: 1rem;
 }
