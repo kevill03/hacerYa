@@ -311,7 +311,7 @@ a.flexContainer {
 .loginForm input:focus {
   outline: none;
   border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(6, 9, 202, 0.2);
 }
 
 .sideBarContainer {
@@ -426,8 +426,7 @@ a.flexContainer {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 50%;
-
-  background-color: white;
+  background: linear-gradient(to bottom right, #640093, pink);
   padding: 5rem;
   border-radius: 5px;
   box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
@@ -449,7 +448,7 @@ a.flexContainer {
   top: 1.2rem;
   right: 2rem;
   font-size: 3.5rem;
-  color: #333;
+  color: #000000;
   cursor: pointer;
   border: none;
   background: none;
@@ -462,17 +461,18 @@ a.flexContainer {
 .createActionForm input:focus,
 .createActionForm textarea:focus {
   outline: none;
-  border-color: #b863f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.664);
 }
 .createActionForm input,
 .createActionForm textarea {
   width: 100%;
   margin: 1px;
-  border: #333 solid 2px;
+  border: #ffffff solid 2px;
   border-radius: 5px;
   padding: 5px;
 }
 #formTitle {
   margin-bottom: 1rem;
+  color: white;
 }
