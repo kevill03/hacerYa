@@ -12,7 +12,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles/style.css" />
-    <title>Iniciar Sesión | HacerYA</title>
+    <title>Registro | HacerYA</title>
   </head>
   <body class="flexContainer loginBody">
     <div class="loginGrid gridContainer">
@@ -31,10 +31,32 @@
       <main class="flexContainer loginMain">
         <div class="flexContainer loginContainer">
           <h1 class="subtitle">
-            Comienza a <span class="logo">HacerYA</span>!
+            Regístrate en <span class="logo">HacerYA</span>!
           </h1>
-          <p class="text">Inicia Sesión para continuar</p>
+          <p class="text">Crea tu cuenta para comenzar</p>
           <form action="#" method="post" class="loginForm flexContainer">
+            <div class="inputGroup flexContainer">
+              <label for="nameUser" class="visually-hidden">Nombre</label>
+              <input
+                type="text"
+                name="nameUser"
+                id="nameUser"
+                placeholder="Ingrese su nombre"
+                required
+              />
+            </div>
+
+            <div class="inputGroup flexContainer">
+              <label for="lastNameUser" class="visually-hidden">Apellido</label>
+              <input
+                type="text"
+                name="lastNameUser"
+                id="lastNameUser"
+                placeholder="Ingrese su apellido"
+                required
+              />
+            </div>
+
             <div class="inputGroup flexContainer">
               <label for="emailUser" class="visually-hidden"
                 >Correo Electrónico</label
@@ -61,12 +83,25 @@
               />
             </div>
 
-            <button type="button" class="btn loginBtn">Continuar</button>
+            <div class="inputGroup flexContainer">
+              <label for="confirmPasswordUser" class="visually-hidden"
+                >Confirmar Contraseña</label
+              >
+              <input
+                type="password"
+                name="confirmPasswordUser"
+                id="confirmPasswordUser"
+                placeholder="Confirme su clave"
+                required
+              />
+            </div>
+
+            <button type="button" id="signUpBtn" class="btn loginBtn">
+              Registrarme
+            </button>
           </form>
           <ul class="flexContainer footerList">
-            <li>
-              <a href="signUp.html">¿No tienes una cuenta? Crea una cuenta</a>
-            </li>
+            <li><a href="login.html">¿Ya tienes cuenta? Inicia Sesión</a></li>
           </ul>
         </div>
       </main>
@@ -79,5 +114,5 @@
       </footer>
     </div>
   </body>
-  <script type="module" src="scripts/login.js"></script>
+  <script type="module" src="scripts/register.js"></script>
 </html>

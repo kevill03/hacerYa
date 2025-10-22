@@ -5,32 +5,42 @@ import { pool } from "../db.js";
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
-/*Registro de usuarios (para el primer modulo se solicitó entregar los niveles de usuario sin encriptar las contraseñas, asi que por ahora se encuentra en desarrollo y no está asociado a ningun action button del front)
+// ----------------------------------------------------------------------
+// RUTA: REGISTRO DE USUARIOS (POST /register) - ACTIVA
+// ----------------------------------------------------------------------
 router.post("/register", async (req, res) => {
   try {
     const { email, password, full_name, role } = req.body;
+
+    // 1. Validación básica de campos requeridos
     if (!email || !password)
       return res.status(400).json({ error: "Email y contraseña requeridos" });
 
+    // 2. Verificación de usuario existente
     const { rows } = await pool.query("SELECT id FROM users WHERE email = $1", [
       email,
     ]);
     if (rows.length)
       return res.status(409).json({ error: "Email ya registrado" });
 
-    // Guardamos la contraseña tal cual (texto plano) — solo para pruebas
+    // 3. Inserción del nuevo usuario
+    // NOTA: Se mantiene la contraseña en texto plano según lo solicitado para el módulo inicial.
     const insert = await pool.query(
       "INSERT INTO users (email, password, full_name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role, full_name",
       [email, password, full_name || null, role || "user"]
     );
+
+    // 4. Respuesta de éxito
     return res.status(201).json({ user: insert.rows[0] });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Error en servidor" });
   }
 });
-*/
-/* El Login de usuarios se encuentra activo y funcionando, las credenciales se enviaron en el bloc de notas anexado en la entrega de la Actividad Sumativa*/
+
+// ----------------------------------------------------------------------
+// RUTA: LOGIN de usuarios (POST /register) - ACTIVA
+// ----------------------------------------------------------------------
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;

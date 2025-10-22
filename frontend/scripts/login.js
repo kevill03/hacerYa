@@ -26,7 +26,7 @@ document.querySelector(".loginBtn").addEventListener("click", async () => {
       localStorage.setItem("user", JSON.stringify(data));
       window.location.href = "mainPage.html";
     } else {
-      alert(data.message || "Credenciales inválidas");
+      alert(data.error || "Credenciales inválidas");
     }
   } catch (error) {
     console.error("Error al iniciar sesión:", error);
