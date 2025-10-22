@@ -93,6 +93,7 @@ export async function createProject({
 
   // TODO: Si el proyecto NO es personal (is_personal = false) y se crea correctamente,
   // se debería añadir automáticamente al creador a la tabla project_members como 'admin'.
+  //Tambien si no es personal debe verificar si es miembro de un workspace y solo asi dejarlo crearlo en ese workspace
 
   return rows[0];
 }

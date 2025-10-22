@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import projectRoutes from "./routes/projects.js"; // Importamos las rutas de proyectos
-
+import workspacesRoutes from "./routes/workspaces.js";
 //import { authRequired } from "./middleware/auth.js"; // Comentado, como lo tenías
 
 dotenv.config();
@@ -20,6 +20,12 @@ app.use("/auth", authRoutes);
 // para proteger todas sus rutas (GET, POST, PATCH, DELETE).
 app.use("/api/projects", projectRoutes);
 
+// RUTAS DE Workspaces (PROTEGIDAS):
+// Usamos el prefijo '/api/workspaces'.
+// wrokspacesRoutes ya incluye el middleware de autenticación (authMiddleware.verifyToken)
+// para proteger todas sus rutas (GET, POST, PATCH, DELETE).
+
+app.use("/api/workspaces", workspacesRoutes);
 /*El bloque comentado forma parte de pruebas personales y no estan contempladas para el primer entregable del Modulo 1
 app.get("/profile", authRequired, (req, res) => {
   res.json({ message: "Ruta protegida", user: req.user });

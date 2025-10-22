@@ -89,12 +89,10 @@ router.put("/:id", async (req, res) => {
 
     if (updatedProject.rowCount === 0) {
       // El proyecto no existe, o el usuario no tiene permisos (es importante la lógica del modelo)
-      return res
-        .status(404)
-        .json({
-          message:
-            "Proyecto no encontrado o no tienes permiso para actualizarlo.",
-        });
+      return res.status(404).json({
+        message:
+          "Proyecto no encontrado o no tienes permiso para actualizarlo.",
+      });
     }
     return res.json({ message: "Proyecto actualizado con éxito." });
   } catch (error) {
@@ -115,12 +113,9 @@ router.delete("/:id", async (req, res) => {
     const result = await ProjectModel.deleteProject(id, userId);
 
     if (result.rowCount === 0) {
-      return res
-        .status(404)
-        .json({
-          message:
-            "Proyecto no encontrado o no tienes permiso para eliminarlo.",
-        });
+      return res.status(404).json({
+        message: "Proyecto no encontrado o no tienes permiso para eliminarlo.",
+      });
     }
     // Retornamos 204 No Content para indicar que la eliminación fue exitosa sin retornar cuerpo.
     return res.status(204).send();
