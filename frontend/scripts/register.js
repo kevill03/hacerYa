@@ -7,40 +7,47 @@ document.getElementById("signUpBtn").addEventListener("click", async () => {
   const nameUser = document.getElementById("nameUser").value.trim();
   const lastNameUser = document.getElementById("lastNameUser").value.trim();
   const form = document.querySelector(".loginForm");
-  const fullName = `${nameUser} ${lastNameUser}`;
+  const full_name = `${nameUser} ${lastNameUser}`;
+
   if (!form.checkValidity()) {
     form.reportValidity();
-    // Si el formulario no es válido, el navegador muestra el mensaje y el código se detiene aquí.
     return;
   }
-  if (!email || !password || !confirmPassword || !nameUser || !lastNameUser) {
-    alert("Por favor, completa todos los campos");
-    return;
-  }
+
   if (password !== confirmPassword) {
-    alert("Las contraseñas no coinciden. Inténtelo de nuevo");
+    // Usamos console.error ya que alert() no debe usarse.
+    console.error("Las contraseñas no coinciden. Inténtelo de nuevo");
     return;
   }
+
   try {
     const response = await fetch("http://localhost:3000/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password, fullName }),
+      body: JSON.stringify({ email, password, full_name }),
     });
 
     const data = await response.json();
 
     if (response.ok) {
+      // NOTA: El backend de /register actualmente NO devuelve un token.
+      // Si quieres login automático, el backend debe modificarse.
+      // localStorage.setItem("token", data.token); // Esta línea FALLARÍA
+
       localStorage.setItem("user", JSON.stringify(data));
-      window.location.href = "mainPage.html";
-      alert(data.message || `Bienvenido ${fullName}`);
+
+      // La mejor práctica después del registro es redirigir al login
+      window.location.href = "login.html";
+      console.log(`Registro exitoso. Bienvenido ${full_name}.`);
     } else {
-      alert(data.error || "El usuario no fue creado");
+      console.error(
+        "Error al registrar:",
+        data.error || "El usuario no fue creado"
+      );
     }
   } catch (error) {
-    console.error("Error al crear la cuenta:", error);
-    alert("Error al conectar con el servidor");
+    console.error("Error al conectar con el servidor:", error);
   }
 });

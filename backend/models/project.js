@@ -1,27 +1,35 @@
 import { pool } from "../src/db.js"; // CORRECCIÓN CLAVE: La ruta ahora es '../src/db.js'
+import { logAction } from "../src/utils/logAction.js"; // AÑADIDO: Importar la utilidad de bitácora
 
 /**
  * Módulo para interactuar con la tabla 'projects' y sus relaciones.
  * Este modelo asume que se recibe el userId para comprobaciones de permisos y listado.
  */
 
-// --- Helpers de Permisos ---
+// --- Helpers de Proyectos ---
 
 /**
- * Verifica si el usuario es el creador del proyecto.
- * NOTA: Para actualización/eliminación, el WHERE en la query final es más seguro,
- * pero esta función ayuda a la legibilidad y a la lógica más compleja (si la hubiera).
- * @param {string} projectId - ID del proyecto.
- * @param {string} userId - ID del usuario.
- * @returns {Promise<boolean>} - Verdadero si tiene permisos de creador.
+ * Añade un miembro a un proyecto. Utilizado internamente por createProject.
  */
-async function hasProjectPermission(projectId, userId) {
-  // Verifica si el usuario es el creador (created_by)
+async function addMemberToProject(projectId, userId, role = "member") {
   const query = `
-        SELECT id FROM projects 
-        WHERE id = $1 AND created_by = $2
+        INSERT INTO project_members (project_id, user_id, role_in_project)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (project_id, user_id) DO NOTHING;
     `;
-  const result = await pool.query(query, [projectId, userId]);
+  const values = [projectId, userId, role];
+  await pool.query(query, values);
+}
+
+/**
+ * Verifica si el usuario es miembro del workspace dado.
+ */
+async function isMemberOfWorkspace(workspaceId, userId) {
+  const query = `
+        SELECT id FROM workspace_members 
+        WHERE workspace_id = $1 AND user_id = $2
+    `;
+  const result = await pool.query(query, [workspaceId, userId]);
   return result.rowCount > 0;
 }
 
@@ -52,7 +60,6 @@ export async function getAllProjectsByUserId(userId) {
  * @returns {Promise<Object|null>} - El objeto proyecto o null.
  */
 export async function getProjectById(projectId, userId) {
-  // Query que asegura que el proyecto existe Y que el usuario tiene acceso
   const query = `
         SELECT DISTINCT p.*, u.full_name AS created_by_name
         FROM projects p
@@ -77,6 +84,16 @@ export async function createProject({
   created_by,
   is_personal,
 }) {
+  // 1. VERIFICACIÓN: Si se proporciona workspace_id y NO es personal, verificar membresía.
+  if (!is_personal && workspace_id) {
+    const isMember = await isMemberOfWorkspace(workspace_id, created_by);
+    if (!isMember) {
+      // Este error debe ser capturado y manejado en la capa de rutas (projects.js)
+      throw new Error("User is not a member of the specified workspace.");
+    }
+  }
+
+  // 2. CREACIÓN del Proyecto
   const query = `
         INSERT INTO projects (name, description, workspace_id, created_by, is_personal)
         VALUES ($1, $2, $3, $4, $5)
@@ -85,17 +102,29 @@ export async function createProject({
   const values = [
     name,
     description || null,
-    workspace_id || null,
+    is_personal ? null : workspace_id || null, // Si es personal, workspace_id es NULL
     created_by,
     is_personal || false,
   ];
   const { rows } = await pool.query(query, values);
+  const newProject = rows[0];
 
-  // TODO: Si el proyecto NO es personal (is_personal = false) y se crea correctamente,
-  // se debería añadir automáticamente al creador a la tabla project_members como 'admin'.
-  //Tambien si no es personal debe verificar si es miembro de un workspace y solo asi dejarlo crearlo en ese workspace
+  if (newProject) {
+    // 3. LÓGICA DE MIEMBROS (si no es personal, añadir al creador como admin/member)
+    if (!is_personal) {
+      await addMemberToProject(newProject.id, created_by, "admin");
+    }
 
-  return rows[0];
+    // 4. BITÁCORA
+    logAction({
+      userId: created_by,
+      workspaceId: newProject.workspace_id,
+      projectId: newProject.id,
+      action: `CREATED_PROJECT: ${newProject.name}`,
+    });
+  }
+
+  return newProject;
 }
 
 /**
@@ -117,7 +146,8 @@ export async function updateProject(projectId, data, userId) {
       data[key] !== undefined &&
       key !== "id" &&
       key !== "created_by" &&
-      key !== "created_at"
+      key !== "created_at" &&
+      key !== "workspace_id" // Generalmente el workspace_id no se cambia después de la creación
     ) {
       fields.push(`${key} = $${index++}`);
       values.push(data[key]);
@@ -136,6 +166,7 @@ export async function updateProject(projectId, data, userId) {
   values.push(userId);
   const userIdIndex = index;
 
+  // MODIFICACIÓN CLAVE: RETURNING * para obtener el nombre para el log
   const query = `
         UPDATE projects
         SET ${fields.join(", ")}
@@ -144,6 +175,19 @@ export async function updateProject(projectId, data, userId) {
     `;
 
   const result = await pool.query(query, values);
+  const updatedProject = result.rows[0]; // Capturar el proyecto actualizado
+
+  // BITÁCORA
+  if (result.rowCount > 0 && updatedProject) {
+    logAction({
+      userId: userId,
+      projectId: updatedProject.id,
+      workspaceId: updatedProject.workspace_id, // Usar el workspace_id del objeto devuelto
+      // AÑADIDO EL NOMBRE DEL PROYECTO AL LOG
+      action: `UPDATED_PROJECT_DETAILS: ${updatedProject.name}`,
+    });
+  }
+
   return result;
 }
 
@@ -155,13 +199,28 @@ export async function updateProject(projectId, data, userId) {
  */
 export async function deleteProject(projectId, userId) {
   // Verificamos y eliminamos en una sola query. Solo el creador puede eliminar.
+  // MODIFICACIÓN CLAVE: RETURNING name Y workspace_id para el log
   const query = `
         DELETE FROM projects
-        WHERE id = $1 AND created_by = $2;
+        WHERE id = $1 AND created_by = $2
+        RETURNING name, workspace_id;
     `;
   const result = await pool.query(query, [projectId, userId]);
+
+  // BITÁCORA
+  if (result.rowCount > 0) {
+    const deletedProject = result.rows[0]; // Capturar el nombre y workspace_id del proyecto eliminado
+    const workspaceId = deletedProject.workspace_id;
+    const projectName = deletedProject.name; // Capturar el nombre
+
+    logAction({
+      userId: userId,
+      // No se puede enviar projectId porque ya fue eliminado de la DB (se usa el id para la consulta)
+      workspaceId: workspaceId,
+      // AÑADIDO EL NOMBRE DEL PROYECTO AL LOG
+      action: `DELETED_PROJECT: ${projectName}`,
+    });
+  }
+
   return result;
 }
-
-// Nota: No se requiere exportación por defecto (export default) porque
-// projects.js usa import * as ProjectModel from ... para importar todas las funciones.
