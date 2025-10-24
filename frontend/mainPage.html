@@ -83,6 +83,11 @@
         </div>
       </div>
     </div>
+    <div class="detailsWindow hidden">
+        <button class="closeWindow detailsCloseBtn">&times;</button>
+        <div id="detailsContent" class="flexContainer">
+            </div>
+    </div>
     <div class="createWindow hidden">
       <button class="closeWindow">&times;</button>
       <h1 id="formTitle">Crea tu Proyecto</h1>
@@ -106,7 +111,7 @@
               >
               <textarea name="inputDescription" id="inputDescription"  placeholder="Ingrese una breve descripción de su proyecto"></textarea>
             </div>
-                <button class="btn flexContainer mainActionBtn" type="button">
+                <button id="submitCreateBtn" class="btn flexContainer mainActionBtn" type="button">
               Crear Proyecto
               <img
                 src="images/addImage.png"

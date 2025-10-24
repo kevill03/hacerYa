@@ -96,7 +96,7 @@ export async function logAction({
     await pool.query(query, values);
 
     // Opcional: imprimir en consola para debugging (usando la variable finalActionMessage)
-    console.log(`[LOGGED]: ${finalActionMessage}`);
+    console.log(`[LOG]: ${finalActionMessage}`);
   } catch (error) {
     // MUY IMPORTANTE: Se registra el error de DB para debugging
     console.error(

@@ -39,10 +39,10 @@ logoutBtn.addEventListener("click", async function () {
       console.log(`LOGOUT: Servidor respondió con estado ${response.status}`); // NOTA: No importa si la llamada falla o tiene éxito; la limpieza local debe continuar.
     }
   } catch (error) {
-    // Opcional: registrar el error de red en la consola del navegador
+    // Registro del error de red en la consola del navegador
     console.error("🔴 FALLO CRÍTICO DE RED/SERVIDOR AL HACER LOGOUT:", error);
   } finally {
-    // 2. Limpiar almacenamiento local y redirigir (siempre se ejecuta)
+    //  Limpieza de almacenamiento local y redirigir (siempre se ejecuta)
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     sessionStorage.clear();

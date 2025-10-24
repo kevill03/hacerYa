@@ -394,13 +394,7 @@ a.flexContainer {
 .hidden {
   display: none;
 }
-.mainData {
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  border: 1px solid black;
-}
+
 .actionIcon {
   width: 50px;
   margin-left: 10px;
@@ -420,7 +414,8 @@ a.flexContainer {
   cursor: pointer;
   background-color: red;
 }
-.createWindow {
+.createWindow,
+.detailsWindow {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -475,4 +470,156 @@ a.flexContainer {
 #formTitle {
   margin-bottom: 1rem;
   color: white;
+}
+
+/* --- ESTILOS PARA LAS TARJETAS LISTADAS (.card-details) --- */
+
+/* Contenedor principal de las listas (Grid vs Flex) */
+.mainData {
+  /* Asegura que el contenido ocupe el espacio disponible y permite desplazamiento */
+  align-items: flex-start; /* Alinea los ítems a la izquierda */
+  justify-content: flex-start;
+  flex-direction: row; /* Permite que las tarjetas fluyan */
+  flex-wrap: wrap;
+  padding: 20px;
+  gap: 20px; /* Espacio entre las tarjetas */
+  width: 100%;
+  height: 100%;
+  /* Quitamos el borde negro que tenías para que quede más limpio */
+  border: none;
+  max-width: 100%;
+  overflow-y: auto; /* Permite hacer scroll si hay muchas tarjetas */
+}
+
+/* Estilo Base para las Tarjetas Individuales (Proyectos y Workspaces) */
+.project-card,
+.workspace-card,
+.card-details {
+  /* 1. Fondo, Sombra y Radio Amigable */
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  flex-direction: column; /* Apila el título y la descripción */
+  align-items: flex-start; /* Alinea todo a la izquierda */
+  gap: 5px;
+
+  /* 2. Ancho: Ocupar todo el espacio cuando es FLEX */
+  width: 100%;
+  min-height: 80px;
+}
+
+.card-details:hover {
+  transform: translateY(-3px); /* Efecto 3D al pasar el mouse */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilo de Contenido Interno */
+.card-details h3 {
+  /* Título más grande y en la izquierda */
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #640093; /* Color de tu marca */
+  margin: 0;
+}
+
+.card-details p.description-short {
+  /* Descripción más pequeña */
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+}
+
+/* Estilo para la Vista de Grid */
+/* Usamos la clase .gridContainer en .mainData para activar este layout */
+.mainData.gridContainer {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: grid;
+}
+
+.mainData.gridContainer .card-details {
+  width: 100%; /* Las tarjetas llenan el ancho de su columna en el grid */
+  margin: 0; /* Quitamos el margen lateral, lo dejamos en el gap del grid */
+}
+
+/* --- 1. AJUSTE ESPECÍFICO DE LA VENTANA DE DETALLES --- */
+.detailsWindow {
+  /* Fondo más neutro y profesional para el contenido de lectura */
+  background: none;
+  background-color: #ffffff;
+
+  /* Reducir el padding para una ventana de detalles */
+  padding: 2rem 3rem; /* 32px arriba/abajo, 48px a los lados */
+
+  /* Mantener las propiedades de centrado y sombra */
+  /* width: 50%; /* Puedes mantener este o usar max-width */
+  max-width: 650px; /* Limita el ancho en pantallas muy grandes */
+  border-radius: 10px; /* Esquinas ligeramente más suaves */
+}
+
+/* Opcional: Sobrescribir el título en el modal de detalles para que sea más legible */
+.detailsWindow h1 {
+  color: #333; /* Color oscuro y neutro */
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+/* --- 2. ESTILOS DEL CONTENIDO DE DETALLES (#detailsContent) --- */
+#detailsContent {
+  /* Estilo del contenedor para la información y los botones */
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px; /* Espacio entre secciones de detalles */
+}
+
+/* Estilo para los pares de información (ej. Descripción, Creador) */
+#detailsContent p {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.5;
+  margin: 0;
+}
+
+#detailsContent strong {
+  color: #000;
+  font-weight: 600;
+}
+
+/* --- 3. ESTILOS DE BOTONES DE ACCIÓN (Editar, Eliminar, Añadir Miembro) --- */
+.detailActions {
+  /* Contenedor de botones */
+  width: 100%;
+  justify-content: flex-start;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+/* Botones genéricos de acción dentro del modal */
+.detailActions .btn {
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 8px;
+}
+
+/* Botón Editar (Neutro/Primario) */
+.detailActions .btnEdit {
+  background-color: #1a73e8; /* Azul primario */
+  color: white;
+}
+
+/* Botón Eliminar (Peligro) */
+.detailActions .btnDelete {
+  background-color: #dc3545; /* Rojo de peligro */
+  color: white;
+}
+
+/* Botón Añadir Miembro (Secundario/Información) */
+.detailActions .btnAddMember {
+  background-color: #ffc107; /* Amarillo/Naranja */
+  color: #333;
 }
