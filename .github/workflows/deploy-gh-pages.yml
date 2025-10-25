@@ -3,22 +3,19 @@ name: Desplegar Frontend en GitHub Pages
 on:
   push:
     branches:
-      - main
+      - main # O 'master' si usas esa
+
+# Otorga permisos
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    # --- AÑADE ESTA SECCIÓN ---
-    # Otorga permisos para que la acción pueda escribir en GitHub Pages
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    # -------------------------
-
     steps:
-      # 1. Descarga el código de tu repositorio
+      # 1. Descarga el código
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -26,14 +23,13 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
-      # 3. "Construye" tu sitio (en tu caso, solo es copiar la carpeta 'frontend')
+      # 3. Sube el artefacto (tu carpeta 'frontend')
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3 # <-- ¡VERSIÓN ACTUALIZADA!
+        uses: actions/upload-pages-artifact@v3
         with:
-          # Especifica la carpeta que quieres publicar
           path: ./frontend
 
       # 4. Despliega en GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4 # <-- ¡VERSIÓN ACTUALIZADA A v4!
