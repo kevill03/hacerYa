@@ -3,7 +3,7 @@ name: Desplegar Frontend en GitHub Pages
 on:
   push:
     branches:
-      - main # O 'master' si usas esa
+      - main
 
 jobs:
   deploy:
