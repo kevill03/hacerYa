@@ -1,51 +1,92 @@
 const logoutBtn = document.querySelector(".logoutBtn");
 
 window.addEventListener("load", () => {
-  const userData = localStorage.getItem("user"); /*if (!userData) {
-      window.location.href = "login.html";
-      return;
-    }*/
+  const userData = localStorage.getItem("user");
+
+  // Verificación simple para evitar errores si no hay user
+  if (!userData) {
+    console.error(
+      "No se encontró usuario en localStorage. Redirigiendo a login."
+    );
+    // Si por alguna razón no hay usuario, forzamos la salida
+    localStorage.removeItem("token");
+    sessionStorage.clear();
+    window.location.replace("login.html");
+    return;
+  }
 
   const stored = JSON.parse(userData);
   const user = stored.user;
   console.log("Usuario logueado:", user["full_name"]);
 
-  const adminLink = document.querySelector(".admin-link-hidden"); // Si no es admin, ocultamos el enlace de estadísticas
-
+  const adminLink = document.querySelector(".admin-link-hidden");
   if (adminLink) {
     adminLink.style.display = user.role === "admin" ? "flex" : "none";
   }
 });
 
-// MODIFICACIÓN CRÍTICA: La función ahora es ASYNC y llama al backend antes de limpiar.
-logoutBtn.addEventListener("click", async function () {
-  const token = localStorage.getItem("token");
-  const logoutUrl = "https://hacerya.onrender.com/auth/logout"; // 🔴 URL de destino // 1. Intentar notificar al backend para registrar la bitácora
+// MODIFICACIÓN: La lógica async ahora está DENTRO del .then() de SweetAlert
+logoutBtn.addEventListener("click", function () {
+  // <--- Quitamos el async de aquí
 
-  try {
-    // Log de diagnóstico antes del fetch
-    console.log("LOGOUT: Token encontrado:", !!token);
-    console.log("LOGOUT: URL de destino:", logoutUrl);
-    if (token) {
-      const response = await fetch(logoutUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", // Enviar el token en el encabezado de autorización
-          Authorization: `Bearer ${token}`,
+  // 1. REEMPLAZO: Mostramos alerta de CONFIRMACIÓN primero
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: "Tu sesión actual se cerrará.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33", // Rojo para la acción de "salir"
+    cancelButtonColor: "#3085d6", // Azul para "cancelar"
+    confirmButtonText: "Sí, cerrar sesión",
+    cancelButtonText: "Cancelar",
+  }).then(async (result) => {
+    // <--- Ponemos el async aquí
+
+    // 2. Si el usuario confirma...
+    if (result.isConfirmed) {
+      // 3. (Opcional) Mostramos una alerta de "Cerrando sesión..."
+      Swal.fire({
+        title: "Cerrando sesión...",
+        text: "Guardando registro y limpiando datos.",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
         },
       });
 
-      // Log de diagnóstico después del fetch
-      console.log(`LOGOUT: Servidor respondió con estado ${response.status}`); // NOTA: No importa si la llamada falla o tiene éxito; la limpieza local debe continuar.
+      // --- INICIO DE TU LÓGICA ORIGINAL ---
+      const token = localStorage.getItem("token");
+      const logoutUrl = "https://hacerya.onrender.com/auth/logout";
+
+      try {
+        console.log("LOGOUT: Token encontrado:", !!token);
+        console.log("LOGOUT: URL de destino:", logoutUrl);
+        if (token) {
+          const response = await fetch(logoutUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log(
+            `LOGOUT: Servidor respondió con estado ${response.status}`
+          );
+        }
+      } catch (error) {
+        console.error(
+          "🔴 FALLO CRÍTICO DE RED/SERVIDOR AL HACER LOGOUT:",
+          error
+        );
+      } finally {
+        // Esta limpieza se ejecuta sí o sí, lo cual es perfecto.
+        // La redirección cerrará automáticamente la alerta de "Cerrando sesión..."
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        sessionStorage.clear();
+        window.location.replace("login.html");
+      }
+      // --- FIN DE TU LÓGICA ORIGINAL ---
     }
-  } catch (error) {
-    // Registro del error de red en la consola del navegador
-    console.error("🔴 FALLO CRÍTICO DE RED/SERVIDOR AL HACER LOGOUT:", error);
-  } finally {
-    //  Limpieza de almacenamiento local y redirigir (siempre se ejecuta)
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    sessionStorage.clear();
-    window.location.replace("login.html");
-  }
+  });
 });
