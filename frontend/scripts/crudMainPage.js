@@ -1,7 +1,7 @@
 "use strict";
 
 // --- CONFIGURACIÓN Y CONSTANTES ---
-const BASE_API_URL = "http://localhost:3000/api";
+const BASE_API_URL = "https://hacerya.onrender.com/api";
 
 // Declaraciones de los DOS MODALES y sus elementos
 const createModal = document.querySelector(".createWindow"); // Modal de Creación

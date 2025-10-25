@@ -21,7 +21,7 @@ document.getElementById("signUpBtn").addEventListener("click", async () => {
   }
 
   try {
-    const response = await fetch("http://localhost:3000/auth/register", {
+    const response = await fetch("https://hacerya.onrender.com/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

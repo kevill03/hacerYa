@@ -20,7 +20,7 @@ window.addEventListener("load", () => {
 // MODIFICACIÓN CRÍTICA: La función ahora es ASYNC y llama al backend antes de limpiar.
 logoutBtn.addEventListener("click", async function () {
   const token = localStorage.getItem("token");
-  const logoutUrl = "http://localhost:3000/auth/logout"; // 🔴 URL de destino // 1. Intentar notificar al backend para registrar la bitácora
+  const logoutUrl = "https://hacerya.onrender.com/auth/logout"; // 🔴 URL de destino // 1. Intentar notificar al backend para registrar la bitácora
 
   try {
     // Log de diagnóstico antes del fetch
