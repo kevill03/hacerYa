@@ -53,10 +53,15 @@ logoutBtn.addEventListener("click", function () {
           Swal.showLoading();
         },
       });
-
-      // --- INICIO DE TU LÓGICA ORIGINAL ---
       const token = localStorage.getItem("token");
-      const logoutUrl = "https://hacerya.onrender.com/auth/logout";
+      const PROD_API_URL = "https://hacerya.onrender.com/auth/logout"; // Tu URL real
+      const DEV_API_URL = "http://localhost:3000/auth/logout";
+
+      const logoutUrl =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+          ? DEV_API_URL
+          : PROD_API_URL;
 
       try {
         console.log("LOGOUT: Token encontrado:", !!token);

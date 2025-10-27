@@ -1,3 +1,11 @@
+const PROD_API_URL = "https://hacerya.onrender.com"; // Tu URL real
+const DEV_API_URL = "http://localhost:3000";
+
+const BASE_API_URL =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? DEV_API_URL
+    : PROD_API_URL;
 document.querySelector(".loginBtn").addEventListener("click", async () => {
   const email = document.getElementById("emailUser").value.trim();
   const password = document.getElementById("passwordUser").value.trim();
@@ -30,7 +38,7 @@ document.querySelector(".loginBtn").addEventListener("click", async () => {
   // --- 👆 FIN DEL CAMBIO ---
 
   try {
-    const response = await fetch("https://hacerya.onrender.com/auth/login", {
+    const response = await fetch(`${BASE_API_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

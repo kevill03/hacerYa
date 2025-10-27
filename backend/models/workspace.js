@@ -14,7 +14,7 @@ export async function isWorkspaceAdminOrCreator(workspaceId, userId) {
   // 1. Verificar si es el creador (columna created_by)
   const isCreatorQuery = `
     SELECT id FROM workspaces WHERE id = $1 AND created_by = $2
-  `.trim();
+    `.trim();
   const isCreator = await pool.query(isCreatorQuery, [workspaceId, userId]);
 
   if (isCreator.rowCount > 0) {
@@ -25,7 +25,7 @@ export async function isWorkspaceAdminOrCreator(workspaceId, userId) {
   const isAdminQuery = `
     SELECT id FROM workspace_members 
     WHERE workspace_id = $1 AND user_id = $2 AND role_in_workspace = 'admin'
-  `.trim();
+    `.trim();
   const isAdmin = await pool.query(isAdminQuery, [workspaceId, userId]);
 
   return isAdmin.rowCount > 0;
@@ -36,7 +36,7 @@ export async function isWorkspaceAdminOrCreator(workspaceId, userId) {
 export async function getUserIdByEmail(email) {
   const query = `
     SELECT id, full_name FROM users WHERE email = $1
-  `.trim();
+    `.trim();
   const { rows } = await pool.query(query, [email]);
   return rows[0] || null; // Devuelve { id, full_name } o null
 }
@@ -83,9 +83,9 @@ export async function getWorkspaceById(workspaceId, userId) {
 export async function createWorkspace({ name, description, created_by }) {
   // 1. Crear el Workspace
   const createQuery = `
-        INSERT INTO workspaces (name, description, created_by)
-        VALUES ($1, $2, $3)
-        RETURNING *
+    INSERT INTO workspaces (name, description, created_by)
+    VALUES ($1, $2, $3)
+    RETURNING *
     `.trim();
 
   const values = [name, description || null, created_by];
@@ -93,21 +93,36 @@ export async function createWorkspace({ name, description, created_by }) {
   const newWorkspace = rows[0];
 
   if (newWorkspace) {
-    // 2. Añadir al creador como miembro administrador (la función ya loguea la adición)
-    await addMemberToWorkspace(
-      newWorkspace.id,
-      created_by,
-      "admin",
-      created_by,
-      newWorkspace.name
-    );
-
-    // LLAMADA A BITÁCORA (Solo registramos la creación del workspace, la membresía ya se registró en addMember)
+    // Se Loguea la CREACIÓN primero
     logAction({
       userId: created_by,
       workspaceId: newWorkspace.id,
-      action: `CREATED_WORKSPACE: ${newWorkspace.name}`,
+      action: `CREATED_WORKSPACE: ${newWorkspace.name}`, // <-- MENSAJE CORREGIDO
     });
+
+    //Se obtiene el nombre (full_name) del creador (necesario para el log de 'addMember')
+    let actorName = "Usuario (ID: " + created_by + ")"; // Valor por defecto
+    try {
+      const userResult = await pool.query(
+        "SELECT full_name FROM users WHERE id = $1",
+        [created_by]
+      );
+      if (userResult.rowCount > 0) {
+        actorName = userResult.rows[0].full_name;
+      }
+    } catch (e) {
+      console.error("Error buscando el nombre del creador para el log:", e);
+    }
+
+    //Se Añade al creador como miembro
+    await addMemberToWorkspace(
+      newWorkspace.id, // 1. workspaceId
+      created_by, // 2. userId (ID del miembro a añadir)
+      "admin", // 3. role
+      created_by, // 4. actorId (ID de quien hace la acción)
+      actorName, // 5. memberName (Nombre del creador)
+      newWorkspace.name // 6. workspaceName (Nombre del nuevo workspace)
+    );
   }
 
   return newWorkspace;
@@ -137,12 +152,19 @@ export async function addMemberToWorkspace(
   const result = await pool.query(query, values);
 
   // BITÁCORA: Registra la acción usando el actorId (quien hizo la acción)
-  if (result.rowCount > 0) {
+  if (result.rowCount > 0 && memberName && workspaceName) {
     logAction({
       userId: actorId, // EL ACTOR de la acción
       workspaceId: workspaceId,
       // Log más claro: "actorId añadió a memberName con rol X en workspaceName"
       action: `MEMBER_ADDED: ${memberName} como ${role} en ${workspaceName}`,
+    });
+  } else if (result.rowCount > 0) {
+    // Fallback por si los nombres no llegaron
+    logAction({
+      userId: actorId,
+      workspaceId: workspaceId,
+      action: `MEMBER_ADDED: Usuario ID ${userId} añadido al workspace ID ${workspaceId}`,
     });
   }
 
@@ -158,7 +180,7 @@ async function isWorkspaceCreator(workspaceId, userId) {
   const query = `
     SELECT id FROM workspaces 
     WHERE id = $1 AND created_by = $2
-  `.trim();
+    `.trim();
   const result = await pool.query(query, [workspaceId, userId]);
   return result.rowCount > 0;
 }
