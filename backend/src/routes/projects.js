@@ -3,7 +3,7 @@ import { Router } from "express";
 // a '../../models/project.js' para llegar desde src/routes/ hasta backend/models/
 import * as ProjectModel from "../../models/project.js";
 import { verifyToken } from "../middleware/auth.js";
-
+import tasksRouter from "./tasks.js";
 const router = Router();
 
 // Middleware de autenticación: Aplica protección a todas las rutas de proyectos
@@ -126,5 +126,5 @@ router.delete("/:id", async (req, res) => {
       .json({ message: "Error interno del servidor al eliminar proyecto." });
   }
 });
-
+router.use("/:id/tasks", tasksRouter);
 export default router;

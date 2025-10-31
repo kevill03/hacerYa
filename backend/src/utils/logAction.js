@@ -21,6 +21,12 @@ const ACTION_MESSAGES = {
   MEMBER_ADDED: "añadió un miembro:", // AÑADIDO: Acción para añadir miembros
   MEMBER_ROLE_UPDATED: `actualizó un rol:`,
   MEMBER_REMOVED: `eliminó un miembro:`,
+
+  //tareas
+  TASK_CREATED: `creó la tarea:`,
+  TASK_STATUS_UPDATED: `actualizó el estado de una tarea:`,
+  TASK_DETAILS_UPDATED: `actualizó detalles de la tarea:`,
+  TASK_DELETED: `eliminó la tarea:`,
 };
 
 /**
