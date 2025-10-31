@@ -19,7 +19,8 @@ const ACTION_MESSAGES = {
   UPDATED_WORKSPACE_DETAILS: "actualizó detalles del espacio de trabajo:",
   DELETED_WORKSPACE: "eliminó el espacio de trabajo:",
   MEMBER_ADDED: "añadió un miembro:", // AÑADIDO: Acción para añadir miembros
-  // Añade más acciones aquí (tareas, etc.)
+  MEMBER_ROLE_UPDATED: `actualizó un rol:`,
+  MEMBER_REMOVED: `eliminó un miembro:`,
 };
 
 /**

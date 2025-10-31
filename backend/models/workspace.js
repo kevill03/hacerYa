@@ -271,3 +271,115 @@ export async function deleteWorkspace(workspaceId, userId, workspaceName) {
 
   return result;
 }
+// ====================================================================
+// --- NUEVAS FUNCIONES PARA EL CRUD DE MIEMBROS ---
+// ====================================================================
+
+/**
+ * Obtiene la lista de miembros de un workspace.
+ * Solo permite la consulta si el 'actorId' es miembro de ese workspace.
+ */
+export async function getMembersByWorkspaceId(workspaceId, actorId) {
+  // 1. Verificar si el 'actorId' (quien pregunta) tiene permiso para ver
+  const checkAccessQuery = `
+    SELECT 1 FROM workspace_members 
+    WHERE workspace_id = $1 AND user_id = $2
+  `.trim();
+  const accessCheck = await pool.query(checkAccessQuery, [
+    workspaceId,
+    actorId,
+  ]);
+
+  if (accessCheck.rowCount === 0) {
+    // Si el actor no es miembro, no puede ver la lista
+    return null;
+  }
+
+  // 2. Si tiene acceso, obtener la lista de todos los miembros
+  const getMembersQuery = `
+    SELECT u.id, u.full_name, u.email, wm.role_in_workspace
+    FROM workspace_members wm
+    JOIN users u ON wm.user_id = u.id
+    WHERE wm.workspace_id = $1
+    ORDER BY u.full_name
+  `.trim();
+  const { rows } = await pool.query(getMembersQuery, [workspaceId]);
+  return rows;
+}
+
+/**
+ * Actualiza el rol de un miembro en un workspace.
+ */
+export async function updateMemberRole(
+  workspaceId,
+  memberId,
+  role,
+  actorId,
+  actorName,
+  memberName,
+  workspaceName
+) {
+  const query = `
+    UPDATE workspace_members
+    SET role_in_workspace = $3
+    WHERE workspace_id = $1 AND user_id = $2
+    RETURNING *
+  `.trim();
+
+  const result = await pool.query(query, [workspaceId, memberId, role]);
+
+  // Bitácora
+  if (result.rowCount > 0) {
+    logAction({
+      userId: actorId,
+      workspaceId: workspaceId,
+      action: `MEMBER_ROLE_UPDATED: ${memberName} ahora es ${role} en ${workspaceName}`,
+    });
+  }
+  return result;
+}
+
+/**
+ * Elimina un miembro de un workspace.
+ * Incluye lógica de negocio para no permitir eliminar al creador.
+ */
+export async function removeMemberFromWorkspace(
+  workspaceId,
+  memberIdToRemove,
+  actorId,
+  actorName,
+  memberName,
+  workspaceName
+) {
+  // 1. Verificar que no se está intentando eliminar al creador del workspace
+  const workspaceCheck = await pool.query(
+    "SELECT created_by FROM workspaces WHERE id = $1",
+    [workspaceId]
+  );
+  if (
+    workspaceCheck.rowCount > 0 &&
+    workspaceCheck.rows[0].created_by == memberIdToRemove
+  ) {
+    // Lanza un error que será capturado por el catch del router
+    throw new Error("No se puede eliminar al creador del workspace.");
+  }
+
+  // 2. Si no es el creador, proceder con la eliminación
+  const deleteQuery = `
+    DELETE FROM workspace_members
+    WHERE workspace_id = $1 AND user_id = $2
+    RETURNING *
+  `.trim();
+
+  const result = await pool.query(deleteQuery, [workspaceId, memberIdToRemove]);
+
+  // Bitácora
+  if (result.rowCount > 0) {
+    logAction({
+      userId: actorId,
+      workspaceId: workspaceId,
+      action: `MEMBER_REMOVED: ${memberName} fue eliminado de ${workspaceName}`,
+    });
+  }
+  return result;
+}

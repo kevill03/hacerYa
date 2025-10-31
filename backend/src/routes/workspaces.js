@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as WorkspaceModel from "../../models/workspace.js"; // Ruta corregida
 import { verifyToken } from "../middleware/auth.js";
-
+import membersRouter from "./workspaceMembers.js";
 const router = Router();
 
 // Middleware de autenticación: Aplica protección a todas las rutas
@@ -137,7 +137,7 @@ router.delete("/:id", async (req, res) => {
       .json({ message: "Error interno del servidor al eliminar workspace." });
   }
 });
-
+/*
 // RUTA 6: AÑADIR MIEMBRO A WORKSPACE (POST /workspaces/:id/members) - NUEVA RUTA
 router.post("/:id/members", async (req, res) => {
   const { id: workspaceId } = req.params;
@@ -218,6 +218,6 @@ router.post("/:id/members", async (req, res) => {
       message: "Error interno del servidor al añadir miembro.",
     });
   }
-});
-
+});*/
+router.use("/:id/members", membersRouter);
 export default router;
