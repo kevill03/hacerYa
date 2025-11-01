@@ -4,7 +4,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import projectRoutes from "./routes/projects.js"; // Importamos las rutas de proyectos
 import workspacesRoutes from "./routes/workspaces.js";
-//import { authRequired } from "./middleware/auth.js"; // Comentado, como lo tenías
+import activityLogRouter from "./routes/activityLog.js";
 
 dotenv.config();
 const app = express();
@@ -26,15 +26,8 @@ app.use("/api/projects", projectRoutes);
 // para proteger todas sus rutas (GET, POST, PATCH, DELETE).
 
 app.use("/api/workspaces", workspacesRoutes);
-/*El bloque comentado forma parte de pruebas personales y no estan contempladas para el primer entregable del Modulo 1
-app.get("/profile", authRequired, (req, res) => {
-  res.json({ message: "Ruta protegida", user: req.user });
-});
 
-import { adminOnly } from "./middleware/auth.js";
-app.get("/admin/stats", authRequired, adminOnly, (req, res) => {
-  res.json({ msg: "Solo admins pueden ver esto" });
-});*/
-
+//Ruta para la bitacora de acciones
+app.use("/api/activity-log", activityLogRouter);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server listening on ${PORT}`));

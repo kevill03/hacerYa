@@ -5,20 +5,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
 /**
  * Middleware para verificar un token JWT, asegurar la autenticación
- * y adjuntar la información del usuario a req.user y req.userId.
- * RENOMBRADO de 'authRequired' a 'verifyToken' para compatibilidad con las rutas.
- */
+ * y adjuntar la información del usuario a req.user y req.userId.*/
 export const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     // Mejoramos el mensaje para ser más específico que "Token faltante"
-    return res
-      .status(401)
-      .json({
-        error:
-          "Token de autorización faltante o formato incorrecto (Bearer token).",
-      });
+    return res.status(401).json({
+      error:
+        "Token de autorización faltante o formato incorrecto (Bearer token).",
+    });
   }
 
   // Extraemos el token eliminando "Bearer "
