@@ -27,6 +27,10 @@ const ACTION_MESSAGES = {
   TASK_STATUS_UPDATED: `actualizó el estado de una tarea:`,
   TASK_DETAILS_UPDATED: `actualizó detalles de la tarea:`,
   TASK_DELETED: `eliminó la tarea:`,
+  //Proyectos
+  PROJECT_MEMBER_ADDED: `añadió un miembro a un proyecto:`,
+  PROJECT_MEMBER_ROLE_UPDATED: `actualizó un rol de proyecto:`,
+  PROJECT_MEMBER_REMOVED: `eliminó un miembro de un proyecto:`,
 };
 
 /**

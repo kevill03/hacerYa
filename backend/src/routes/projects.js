@@ -1,9 +1,8 @@
 import { Router } from "express";
-// CORRECCIÓN CRÍTICA: Se cambia la ruta relativa de '../models/project.js'
-// a '../../models/project.js' para llegar desde src/routes/ hasta backend/models/
 import * as ProjectModel from "../../models/project.js";
 import { verifyToken } from "../middleware/auth.js";
 import tasksRouter from "./tasks.js";
+import projectMembersRouter from "./projectMembers.js";
 const router = Router();
 
 // Middleware de autenticación: Aplica protección a todas las rutas de proyectos
@@ -127,4 +126,5 @@ router.delete("/:id", async (req, res) => {
   }
 });
 router.use("/:id/tasks", tasksRouter);
+router.use("/:id/members", projectMembersRouter);
 export default router;
