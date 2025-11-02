@@ -1,7 +1,11 @@
 "use strict";
-
+// ---- Import funciones de tareas y miembros de workspaces Cambio 01/11/2025---------
+import { renderKanbanBoard } from "./taskManager.js";
+import { apiRequest } from "./api.js";
+//import { renderMemberModal } from "./workspaceMembers.js";
+//------------------------------------------------------------
 // --- CONFIGURACIÓN Y CONSTANTES ---
-
+/*
 const PROD_API_URL = "https://hacerya.onrender.com/api"; // Tu URL real
 const DEV_API_URL = "http://localhost:3000/api";
 
@@ -10,7 +14,7 @@ const BASE_API_URL =
   window.location.hostname === "127.0.0.1"
     ? DEV_API_URL
     : PROD_API_URL;
-
+*/
 // Declaraciones de los DOS MODALES y sus elementos
 const createModal = document.querySelector(".createWindow"); // Modal de Creación
 const detailsModal = document.querySelector(".detailsWindow"); // Modal de Detalles (SOLO para Proyectos ahora)
@@ -40,8 +44,6 @@ let appState = {
   allWorkspaces: [], // Cache de todos los workspaces
   currentUser: null, // Almacenar datos del usuario logueado
 };
-
-// --- UTILITIES (Modal) ---
 
 // --- UTILITIES (Modal) ---
 
@@ -147,9 +149,10 @@ const changeView = function () {
 };
 
 // --- LOGIC: DATA FETCHING ---
-const getToken = () => localStorage.getItem("token");
+//const getToken = () => localStorage.getItem("token");
 
 // FUNCIÓN DE FETCH GENERALIZADA (PARA GET, POST, PUT, DELETE)
+/*
 const apiRequest = async (endpoint, method = "GET", body = null) => {
   const token = getToken();
   // Validar token para métodos que no sean GET (excepto login/register que no pasan por aquí)
@@ -215,7 +218,7 @@ const apiRequest = async (endpoint, method = "GET", body = null) => {
     // document.getElementById('error-message').textContent = `Error: ${error.message}`;
     throw error; // Propagar el error para manejo específico si es necesario
   }
-};
+};*/
 
 // --- LOGIC: CONTENT RENDERING ---
 
@@ -464,7 +467,8 @@ const openDetailsModal = (itemId, itemType) => {
 const renderView = async (
   viewName,
   workspaceId = null,
-  workspaceName = null
+  workspaceName = null,
+  projectId = null
 ) => {
   appState.currentView = viewName; // Actualizar vista actual
 
@@ -488,6 +492,17 @@ const renderView = async (
     case "viewWorkspaceProjects":
       await renderProjects(workspaceId, workspaceName); // Espera a que termine
       break;
+    //------ Nuevo caso para vista de tareas 01/11/2025-------------
+    case "kanban":
+      // Ocultar el botón de "Crear Proyecto/Workspace"
+      createActionButton.style.display = "none";
+      // Opcional: Ocultar el botón de "Alternar Vista" si no aplica
+      btnChangeView.forEach((btn) => (btn.style.display = "none"));
+
+      // El director llama al especialista del Kanban
+      await renderKanbanBoard(mainContentArea, projectId);
+      break;
+    // --- FIN DE LA ADICIÓN ---
     default:
       mainContentArea.innerHTML = "<h2>Vista no encontrada.</h2>";
       createActionButton.style.display = "none";
@@ -600,7 +615,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // Listener DELEGADO para clicks en las tarjetas
-  // Listener DELEGADO para clicks en las tarjetas (SIMPLIFICADO)
   mainContentArea.addEventListener("click", async (e) => {
     const card = e.target.closest(".card-details");
     if (card) {
@@ -683,6 +697,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     else if (targetButton.classList.contains("btnViewTasks")) {
       console.log(`FUNCIONALIDAD FUTURA: Kanban para proyecto ID: ${itemId}`);
       closeAnyWindow();
+      //-----Nuevo cambio 01/11/2025-----------------
+      const projectId = itemId;
+      // Llamamos al router principal para que cargue la vista Kanban
+      await renderView("kanban", null, null, projectId);
+
+      // Actualizamos el hash del navegador
+      const projectName =
+        targetButton.closest(".detailsContent")?.querySelector("h2")
+          ?.textContent || "Proyecto";
+      document.title = `Kanban - ${projectName} | HacerYA`;
+      // (Asumiendo que appState.currentWorkspaceId está seteado si venimos de un workspace)
+      if (appState.currentWorkspaceId) {
+        window.history.pushState(
+          null,
+          "",
+          `#workspaces/${appState.currentWorkspaceId}/projects/${projectId}/tasks`
+        );
+      } else {
+        window.history.pushState(null, "", `#projects/${projectId}/tasks`);
+      }
+      //----Fin cambio----------
     }
     // Botones Específicos de Workspace
     else if (targetButton.classList.contains("btnAddMember")) {

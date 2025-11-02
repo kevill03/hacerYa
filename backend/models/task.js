@@ -4,18 +4,36 @@ import { logAction } from "../src/utils/logAction.js";
 // --- HELPERS DE PERMISOS ---
 
 /**
- * Verifica si un usuario es miembro de un proyecto.
+ * Verifica si un usuario es miembro O EL CREADOR de un proyecto.
  * @param {string} projectId - El ID del proyecto.
- * * @param {string} userId - El ID del usuario.
- * @returns {boolean} - True si es miembro, false si no.
+ * @param {string} userId - El ID del usuario.
+ * @returns {boolean} - True si tiene acceso, false si no.
  */
 async function isProjectMember(projectId, userId) {
-  const query = `
+  // 1. Comprueba si es miembro a través de la tabla project_members
+  const memberQuery = `
     SELECT 1 FROM project_members
     WHERE project_id = $1 AND user_id = $2
   `.trim();
-  const result = await pool.query(query, [projectId, userId]);
-  return result.rowCount > 0;
+  const memberResult = await pool.query(memberQuery, [projectId, userId]);
+
+  if (memberResult.rowCount > 0) {
+    return true; // Es miembro (ej. un proyecto de workspace)
+  }
+
+  // 2. Si no es miembro, comprueba si es el CREADOR del proyecto
+  // (Esto es crucial para los proyectos personales)
+  const creatorQuery = `
+    SELECT 1 FROM projects
+    WHERE id = $1 AND created_by = $2
+  `.trim();
+  const creatorResult = await pool.query(creatorQuery, [projectId, userId]);
+
+  if (creatorResult.rowCount > 0) {
+    return true; // Es el creador (ej. un proyecto personal)
+  }
+
+  return false; // No es ninguna de las dos, acceso denegado
 }
 
 /**
