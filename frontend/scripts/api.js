@@ -39,7 +39,7 @@ export const apiRequest = async (endpoint, method = "GET", body = null) => {
     const response = await fetch(`${BASE_API_URL}${endpoint}`, options);
 
     if (response.status === 204) {
-      return { success: true };
+      return { data: { success: true }, status: response.status };
     }
 
     const contentType = response.headers.get("content-type");
@@ -62,7 +62,7 @@ export const apiRequest = async (endpoint, method = "GET", body = null) => {
           `Error ${response.status}: Fallo en la API.`
       );
     }
-    return data;
+    return { data, status: response.status };
   } catch (error) {
     console.error(`Error en API ${method} ${endpoint}:`, error);
     throw error;

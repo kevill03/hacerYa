@@ -4,15 +4,16 @@ export async function renderKanbanBoard(container, projectId) {
     // 1. Mostrar un 'Cargando...'
     container.innerHTML = `<p>Cargando tareas...</p>`;
 
-    // 2. Buscar los datos de la API (en paralelo)
-    /* Bloque comentado para pruebas iniciales ya que no se tiene el endpoint para esta funcionalidad
-    const [tasks, members] = await Promise.all([
-      apiRequest(`/projects/${projectId}/tasks`, "GET"),
-      apiRequest(`/projects/${projectId}/members`, "GET"), // Necesitamos miembros para el 'asignar a'
-    ]);*/
-    const tasks = await apiRequest(`/projects/${projectId}/tasks`, "GET");
+    // 2. Buscar los datos de la API
+    // --- INICIO DE LA CORRECCIÓN ---
+    const response = await apiRequest(`/projects/${projectId}/tasks`, "GET");
+    const tasks = response.data; // <-- ¡AQUÍ ESTÁ EL ARREGLO!
+
+    // Dejamos esto vacío por ahora, ya que el endpoint /members no existe
     const members = [];
-    // 3. Construir el esqueleto del Kanban (¡Esto es lo que NO va en el HTML!)
+    // --- FIN DE LA CORRECCIÓN ---
+
+    // 3. Construir el esqueleto del Kanban
     const kanbanHTML = `
       <div class="kanban-container">
         <div class="kanban-column" id="col-por-hacer" data-status="Por hacer">
@@ -39,18 +40,20 @@ export async function renderKanbanBoard(container, projectId) {
     container.innerHTML = kanbanHTML;
 
     // 5. Poblar las columnas con las tareas
-    tasks.forEach((task) => {
-      const taskCard = createTaskCard(task);
-      const column = container.querySelector(
-        `[data-status="${task.status}"] .kanban-tasks-list`
-      );
-      if (column) {
-        column.innerHTML += taskCard;
-      }
-    });
+    if (tasks && Array.isArray(tasks)) {
+      // Verificación de seguridad
+      tasks.forEach((task) => {
+        const taskCard = createTaskCard(task);
+        const column = container.querySelector(
+          `[data-status="${task.status}"] .kanban-tasks-list`
+        );
+        if (column) {
+          column.innerHTML += taskCard;
+        }
+      });
+    }
 
-    // 6. Añadir los Event Listeners (Drag & Drop, clic en botones, etc.)
-    // (Esta es la parte más compleja que irá aquí)
+    // 6. Añadir los Event Listeners
     addKanbanEventListeners(container, projectId, members);
   } catch (error) {
     console.error("Error al renderizar el Kanban:", error);

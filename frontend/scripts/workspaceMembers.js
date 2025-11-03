@@ -7,103 +7,9 @@ let currentWorkspaceName = ""; // Para los títulos
 const overlay = document.querySelector(".overlay");
 let membersModal = null; // Guardará la referencia al modal
 
-/**
- * Función principal: Crea el modal, lo muestra y carga los datos.
- * Esta es la función que llamas desde crudMainPage.js
- */
-export async function renderMemberModal(workspaceId) {
-  currentWorkspaceId = workspaceId;
-
-  // 1. Obtener datos del workspace para el título
-  try {
-    const workspace = appState.allWorkspaces.find((w) => w.id == workspaceId);
-    if (!workspace) throw new Error("Workspace no encontrado en caché.");
-    currentWorkspaceName = workspace.name;
-
-    // 2. Crear y mostrar el esqueleto del modal
-    createModalSkeleton(currentWorkspaceName);
-
-    // 3. Cargar la lista de miembros
-    await populateMembersList();
-  } catch (error) {
-    console.error("Error al renderizar modal de miembros:", error);
-    Swal.fire(
-      "Error",
-      `No se pudieron cargar los datos del workspace: ${error.message}`,
-      "error"
-    );
-  }
-}
-
-/**
- * Crea el HTML del modal y lo añade al DOM.
- */
-function createModalSkeleton(workspaceName) {
-  // Si el modal ya existe, no lo dupliques
-  if (document.getElementById("membersModal")) return;
-
-  const modalHTML = `
-    <div class="detailsWindow" id="membersModal">
-      <button class="closeWindow detailsCloseBtn">&times;</button>
-      <div class="detailsContent">
-        <h1>Gestionar Miembros</h1>
-        <h2>${workspaceName}</h2>
-        
-        <form id="addMemberForm" class="createActionForm flexContainer">
-          <div class="inputGroup flexContainer">
-            <input type="email" id="memberEmailInput" placeholder="correo@ejemplo.com" required />
-            <select id="memberRoleSelect">
-              <option value="member" selected>Miembro</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <button type="submit" class="btn panelBtn">Añadir Miembro</button>
-        </form>
-
-        <div class="members-list-container">
-          <h3>Miembros Actuales</h3>
-          <ul id="membersList" class="members-list">
-            <li>Cargando miembros...</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Añadir el modal al body
-  document.body.insertAdjacentHTML("beforeend", modalHTML);
-
-  // Guardar la referencia y mostrar
-  membersModal = document.getElementById("membersModal");
-  overlay.classList.remove("hidden");
-
-  // Añadir listeners de cierre (¡importante!)
-  membersModal
-    .querySelector(".closeWindow")
-    .addEventListener("click", closeMemberModal);
-  overlay.addEventListener("click", closeMemberModal);
-
-  // Añadir listeners de acciones (submit y clics en la lista)
-  membersModal
-    .querySelector("#addMemberForm")
-    .addEventListener("submit", handleAddMember);
-  membersModal
-    .querySelector("#membersList")
-    .addEventListener("click", handleListClick);
-}
-
-/**
- * Cierra el modal y lo elimina del DOM.
- */
-function closeMemberModal() {
-  if (membersModal) {
-    membersModal.remove(); // Elimina el elemento del DOM
-    membersModal = null;
-  }
-  overlay.classList.add("hidden");
-  // Limpiar el listener del overlay que se añadió en crudMainPage
-  overlay.removeEventListener("click", closeMemberModal);
-}
+// -----------------------------------------------------------------
+// --- PASO 1: DEFINIR LOS "HANDLERS" Y "HELPERS" PRIMERO ---
+// -----------------------------------------------------------------
 
 /**
  * Busca los miembros del workspace y los renderiza en la lista.
@@ -113,10 +19,13 @@ async function populateMembersList() {
   listElement.innerHTML = "<li>Cargando miembros...</li>";
 
   try {
-    const members = await apiRequest(
+    //Captura el objeto de respuesta completo
+    const response = await apiRequest(
       `/workspaces/${currentWorkspaceId}/members`,
       "GET"
     );
+    // Extrae los datos
+    const members = response.data;
 
     if (members.length === 0) {
       listElement.innerHTML = "<li>No hay miembros en este workspace.</li>";
@@ -137,8 +46,7 @@ async function populateMembersList() {
  */
 function createMemberHTML(member) {
   const isCurrentUser = member.id === appState.currentUser.id;
-  const isOwner = false; // TODO: Necesitaríamos saber quién es el 'created_by' para deshabilitar su eliminación.
-  // Por ahora, confiamos en la lógica del backend.
+  // const isOwner = false; // TODO: Lógica para 'isOwner'
 
   return `
     <li class="member-item" data-member-id="${member.id}">
@@ -167,8 +75,6 @@ function createMemberHTML(member) {
   `;
 }
 
-// --- Manejadores de Eventos CRUD ---
-
 /**
  * Maneja el envío del formulario "Añadir Miembro".
  */
@@ -182,12 +88,29 @@ async function handleAddMember(e) {
   if (!email) return;
 
   try {
-    await apiRequest(`/workspaces/${currentWorkspaceId}/members`, "POST", {
-      memberEmail: email,
-      role: role,
-    });
+    // 1. Capturamos la respuesta completa de la API
+    const response = await apiRequest(
+      `/workspaces/${currentWorkspaceId}/members`,
+      "POST",
+      {
+        memberEmail: email,
+        role: role,
+      }
+    );
 
-    Swal.fire("¡Éxito!", `Usuario ${email} añadido.`, "success");
+    // 2. Verificamos el CÓDIGO DE ESTADO
+    if (response.status === 201) {
+      // 201 = CREADO (El usuario era nuevo)
+      Swal.fire("¡Éxito!", `Usuario ${email} añadido.`, "success");
+    } else if (response.status === 200) {
+      // 200 = OK (El usuario ya existía)
+      Swal.fire(
+        "Información",
+        `El usuario ${email} ya es miembro de este workspace.`,
+        "info"
+      );
+    }
+
     emailInput.value = ""; // Limpiar input
     await populateMembersList(); // Recargar la lista
   } catch (error) {
@@ -202,6 +125,7 @@ async function handleAddMember(e) {
 
 /**
  * Maneja los clics en la lista (delegación de eventos para Cambiar Rol o Eliminar).
+ * (¡ESTA FUNCIÓN FALTABA EN TU CÓDIGO!)
  */
 async function handleListClick(e) {
   const target = e.target;
@@ -210,7 +134,6 @@ async function handleListClick(e) {
   if (target.classList.contains("btn-delete-member")) {
     const memberId = target.dataset.memberId;
 
-    // Confirmación con SweetAlert
     Swal.fire({
       title: "¿Estás seguro?",
       text: "¡No podrás revertir esto!",
@@ -269,5 +192,113 @@ async function handleListClick(e) {
         target.value = newRole === "admin" ? "member" : "admin";
       }
     });
+  }
+}
+
+/**
+ * Cierra el modal y lo elimina del DOM.
+ */
+function closeMemberModal() {
+  if (membersModal) {
+    membersModal.remove(); // Elimina el elemento del DOM
+    membersModal = null;
+  }
+  overlay.classList.add("hidden");
+  // Limpiar el listener del overlay que se añadió en crudMainPage
+  overlay.removeEventListener("click", closeMemberModal);
+}
+
+// -----------------------------------------------------------------
+// --- PASO 2: DEFINIR LA FUNCIÓN QUE USA LOS HANDLERS ---
+// -----------------------------------------------------------------
+
+/**
+ * Crea el HTML del modal y lo añade al DOM.
+ */
+function createModalSkeleton(workspaceName) {
+  // Si el modal ya existe, no lo dupliques
+  if (document.getElementById("membersModal")) return;
+
+  const modalHTML = `
+    <div class="detailsWindow" id="membersModal">
+      <button class="closeWindow detailsCloseBtn">&times;</button>
+      <div class="detailsContent">
+        <h1>Gestionar Miembros</h1>
+        <h2>${workspaceName}</h2>
+        
+        <form id="addMemberForm" class="createActionForm flexContainer">
+          <div class="inputGroup flexContainer">
+            <input type="email" id="memberEmailInput" placeholder="correo@ejemplo.com" required />
+            <select id="memberRoleSelect">
+              <option value="member" selected>Miembro</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button type="submit" class="btn panelBtn">Añadir Miembro</button>
+        </form>
+
+        <div class="members-list-container">
+          <h3>Miembros Actuales</h3>
+          <ul id="membersList" class="members-list">
+            <li>Cargando miembros...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Añadir el modal al body
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+  // Guardar la referencia y mostrar
+  membersModal = document.getElementById("membersModal");
+  overlay.classList.remove("hidden");
+
+  // Añadir listeners de cierre (¡importante!)
+  // (Ahora 'closeMemberModal' SÍ está definida)
+  membersModal
+    .querySelector(".closeWindow")
+    .addEventListener("click", closeMemberModal);
+  overlay.addEventListener("click", closeMemberModal);
+
+  // Añadir listeners de acciones (submit y clics en la lista)
+  // (Ahora 'handleAddMember' y 'handleListClick' SÍ están definidas)
+  membersModal
+    .querySelector("#addMemberForm")
+    .addEventListener("submit", handleAddMember);
+  membersModal
+    .querySelector("#membersList")
+    .addEventListener("click", handleListClick);
+}
+
+// -----------------------------------------------------------------
+// --- PASO 3: EXPORTAR LA FUNCIÓN PRINCIPAL ---
+// -----------------------------------------------------------------
+
+/**
+ * Función principal: Crea el modal, lo muestra y carga los datos.
+ * Esta es la función que llamas desde crudMainPage.js
+ */
+export async function renderMemberModal(workspaceId) {
+  currentWorkspaceId = workspaceId;
+
+  // 1. Obtener datos del workspace para el título
+  try {
+    const workspace = appState.allWorkspaces.find((w) => w.id == workspaceId);
+    if (!workspace) throw new Error("Workspace no encontrado en caché.");
+    currentWorkspaceName = workspace.name;
+
+    // 2. Crear y mostrar el esqueleto del modal
+    createModalSkeleton(currentWorkspaceName);
+
+    // 3. Cargar la lista de miembros
+    await populateMembersList();
+  } catch (error) {
+    console.error("Error al renderizar modal de miembros:", error);
+    Swal.fire(
+      "Error",
+      `No se pudieron cargar los datos del workspace: ${error.message}`,
+      "error"
+    );
   }
 }

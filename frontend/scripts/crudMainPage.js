@@ -167,9 +167,10 @@ const renderProjects = async (workspaceId = null, workspaceName = null) => {
 
   try {
     // Siempre recargar proyectos al renderizar esta vista
-    const projectsData = await apiRequest("/projects");
-    if (!projectsData) throw new Error("No se pudieron cargar los proyectos.");
-    appState.allProjects = projectsData; // Actualizar cache global
+    const response = await apiRequest("/projects"); // 1. Renombra a 'response'
+    if (!response || !response.data)
+      throw new Error("No se pudieron cargar los proyectos.");
+    appState.allProjects = response.data; // 2. Asigna solo la propiedad .data
   } catch (error) {
     mainContentArea.innerHTML = `<h2 class="error-message">❌ Error al cargar proyectos: ${error.message}</h2>`;
     return;
@@ -231,10 +232,10 @@ const renderWorkspaces = async () => {
     '<div class="loading-spinner">Cargando Workspaces...</div>';
 
   try {
-    const workspacesData = await apiRequest("/workspaces");
-    if (!workspacesData)
+    const response = await apiRequest("/workspaces");
+    if (!response || !response.data)
       throw new Error("No se pudieron cargar los workspaces.");
-    appState.allWorkspaces = workspacesData;
+    appState.allWorkspaces = response.data;
   } catch (error) {
     mainContentArea.innerHTML = `<h2 class="error-message">❌ Error al cargar workspaces: ${error.message}</h2>`;
     return;
@@ -778,12 +779,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        const resultData = await apiRequest(endpoint, method, payload);
+        const response = await apiRequest(endpoint, method, payload); // 1. Renombra
 
         closeAnyWindow(); // Cierra el modal de creación/edición
         console.log(
           `${submitAction === "edit" ? "Actualización" : "Creación"} exitosa:`,
-          resultData
+          response.data // 2. Muestra solo response.data en la consola
         );
 
         // Limpiar cache correspondiente
