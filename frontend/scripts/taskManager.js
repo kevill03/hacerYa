@@ -1,8 +1,3 @@
-// En tu NUEVO archivo: scripts/taskManager.js
-
-// Importa el helper para hacer peticiones
-// (Asumo que lo tienes en algún lado, ej: apiRequest)
-// import { apiRequest } from './api.js';
 import { apiRequest } from "./api.js";
 export async function renderKanbanBoard(container, projectId) {
   try {

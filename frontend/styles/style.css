@@ -623,3 +623,155 @@ a.flexContainer {
   background-color: #ffc107; /* Amarillo/Naranja */
   color: #333;
 }
+/* ==================================================================== */
+/* --- ESTILOS PARA EL MODAL DE GESTIÓN DE MIEMBROS (workspaceMembers.js) --- */
+/* ==================================================================== */
+
+/* 1. Ajustes al formulario de "Añadir Miembro" */
+#addMemberForm {
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 2rem;
+  gap: 0.5rem;
+}
+
+#addMemberForm .inputGroup {
+  gap: 0.5rem;
+}
+
+#memberEmailInput {
+  flex-grow: 1;
+}
+
+#memberEmailInput,
+#memberRoleSelect {
+  padding: 1px 1px;
+  height: 45px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: white;
+  font-size: 1rem;
+}
+
+#memberEmailInput:focus,
+#memberRoleSelect:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(6, 9, 202, 0.2);
+}
+
+#addMemberForm button[type="submit"] {
+  padding: 5px 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background-color: #1a73e8;
+  color: white;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.3s;
+}
+
+#addMemberForm button[type="submit"]:hover {
+  transform: scale(1.03);
+}
+
+/* 2. Estilos para la Lista de Miembros Actuales */
+.members-list-container {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.members-list-container h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.members-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto; /* El scroll de la lista */
+  border: 1px solid #eee;
+  border-radius: 8px;
+  max-height: 150px;
+}
+
+/* Estilo para cada fila de miembro */
+.member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.member-item:last-child {
+  border-bottom: none;
+}
+
+/* Información del miembro (Nombre y Email) */
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.member-info strong {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+}
+.member-info span {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Contenedor para el Select de Rol y el Botón de Eliminar */
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Select de Rol */
+.member-actions .role-select {
+  padding: 3px 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  font-size: 0.9rem;
+}
+
+/* Botón de Eliminar (la '×') */
+.btn-delete-member {
+  background-color: transparent;
+  border: none;
+  color: #dc3545;
+  font-size: 1.8rem;
+  font-weight: 300;
+  line-height: 1;
+  padding: 0 5px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.2s;
+}
+
+.btn-delete-member:hover {
+  background-color: #fbebee;
+  color: #a01c2a;
+}
+
+/* Estilos para inputs/botones deshabilitados */
+.member-actions .role-select:disabled,
+.btn-delete-member:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #eee;
+}
+.btn-delete-member:disabled:hover {
+  background-color: #eee;
+  color: #dc3545;
+}
