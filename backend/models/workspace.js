@@ -48,10 +48,15 @@ export async function getUserIdByEmail(email) {
  */
 export async function getAllWorkspacesByUserId(userId) {
   const query = `
-        SELECT DISTINCT w.*, u.full_name AS created_by_name
+        SELECT DISTINCT
+          w.*,
+          u.full_name AS created_by_name,
+          wm_user.role_in_workspace AS current_user_role
         FROM workspaces w
         INNER JOIN users u ON w.created_by = u.id
         LEFT JOIN workspace_members wm ON w.id = wm.workspace_id
+        -- Este join busca el rol del usuario actual en CADA workspace
+        LEFT JOIN workspace_members wm_user ON w.id = wm_user.workspace_id AND wm_user.user_id = $1
         WHERE w.created_by = $1 OR wm.user_id = $1
         ORDER BY w.created_at DESC
     `.trim();
@@ -195,7 +200,17 @@ export async function updateWorkspace(
   userId,
   workspaceName
 ) {
-  // Lógica para construir la query SET dinámicamente
+  // --- 1. ¡NUEVA VALIDACIÓN DE PERMISOS! ---
+  // Reutilizamos el helper que ya existe en este archivo.
+  const hasPermission = await isWorkspaceAdminOrCreator(workspaceId, userId);
+
+  if (!hasPermission) {
+    // Si no tiene permiso, devolvemos rowCount 0 para que la ruta
+    // envíe el error "No encontrado o sin permiso".
+    return { rowCount: 0 };
+  }
+
+  // --- 2. Lógica para construir la query (sin cambios) ---
   const fields = [];
   const values = [];
   let index = 1;
@@ -213,30 +228,29 @@ export async function updateWorkspace(
   }
 
   if (fields.length === 0) {
-    return { rowCount: 1 };
+    return { rowCount: 1 }; // No hay nada que actualizar
   }
 
+  // --- 3. ¡CORRECCIÓN EN LA QUERY! ---
   values.push(workspaceId);
   const workspaceIdIndex = index++;
-  values.push(userId);
-  const userIdIndex = index;
+  // Ya no necesitamos pasar el userId al query, el permiso fue validado.
 
   const query = `
         UPDATE workspaces
         SET ${fields.join(", ")}
-        WHERE id = $${workspaceIdIndex} AND created_by = $${userIdIndex}
+        WHERE id = $${workspaceIdIndex} -- <-- ¡WHERE SIMPLIFICADO!
         RETURNING *
     `.trim();
 
   const result = await pool.query(query, values);
   const updatedWorkspace = result.rows[0];
 
-  // LLAMADA A BITÁCORA
+  // --- 4. Lógica de Bitácora (sin cambios) ---
   if (result.rowCount > 0 && updatedWorkspace) {
     logAction({
       userId: userId,
       workspaceId: updatedWorkspace.id,
-      // Usar el nombre pasado, o el nombre que devolvió la query
       action: `UPDATED_WORKSPACE_DETAILS: ${
         workspaceName || updatedWorkspace.name
       }`,
@@ -247,25 +261,36 @@ export async function updateWorkspace(
 }
 
 /**
- * Elimina un workspace si el usuario es el creador.
+ * Elimina un workspace si el usuario es el creador o el administrador.
  * @param {string} workspaceName - Nombre del workspace (pasado desde la ruta para el log).
  */
 export async function deleteWorkspace(workspaceId, userId, workspaceName) {
-  // Verificamos y eliminamos en una sola query. Solo el creador puede eliminar.
+  // --- 1. ¡NUEVA VALIDACIÓN DE PERMISOS! ---
+  const hasPermission = await isWorkspaceAdminOrCreator(workspaceId, userId);
+
+  if (!hasPermission) {
+    return { rowCount: 0 };
+  }
+
+  // --- 2. ¡CORRECCIÓN EN LA QUERY! ---
   const query = `
         DELETE FROM workspaces
-        WHERE id = $1 AND created_by = $2
-        RETURNING name
+        WHERE id = $1 -- <-- ¡WHERE SIMPLIFICADO!
+        RETURNING name, id;
     `.trim();
+  // Ahora solo pasamos el workspaceId
+  const result = await pool.query(query, [workspaceId]);
 
-  const result = await pool.query(query, [workspaceId, userId]);
-  const deletedWorkspace = result.rows[0];
+  // --- 3. Lógica de Bitácora (sin cambios) ---
+  if (result.rowCount > 0) {
+    const deletedProject = result.rows[0];
+    const workspaceId = deletedProject.workspace_id;
+    const projectName = deletedProject.name;
 
-  // LLAMADA A BITÁCORA
-  if (result.rowCount > 0 && deletedWorkspace) {
     logAction({
       userId: userId,
-      action: `DELETED_WORKSPACE: ${workspaceName || deletedWorkspace.name}`, // Usar el nombre pasado o el nombre que devolvió la query
+      workspaceId: workspaceId,
+      action: `DELETED_WORKSPACE: ${projectName}`,
     });
   }
 

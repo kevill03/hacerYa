@@ -2,19 +2,8 @@
 // ---- Import funciones de tareas y miembros de workspaces Cambio 01/11/2025---------
 import { renderKanbanBoard } from "./taskManager.js";
 import { apiRequest } from "./api.js";
-//import { renderMemberModal } from "./workspaceMembers.js";
+import { renderMemberModal } from "./workspaceMembers.js";
 //------------------------------------------------------------
-// --- CONFIGURACIÓN Y CONSTANTES ---
-/*
-const PROD_API_URL = "https://hacerya.onrender.com/api"; // Tu URL real
-const DEV_API_URL = "http://localhost:3000/api";
-
-const BASE_API_URL =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? DEV_API_URL
-    : PROD_API_URL;
-*/
 // Declaraciones de los DOS MODALES y sus elementos
 const createModal = document.querySelector(".createWindow"); // Modal de Creación
 const detailsModal = document.querySelector(".detailsWindow"); // Modal de Detalles (SOLO para Proyectos ahora)
@@ -36,7 +25,7 @@ const subtitleElement = document.querySelector(".subtitle"); // Título principa
 const createActionButton = document.getElementById("createNavButton"); // Botón principal de acción superior
 
 // --- ESTADO GLOBAL DE LA APLICACIÓN ---
-let appState = {
+export let appState = {
   currentWorkspaceId: null, // ID del workspace actualmente visible (null para Proyectos Personales)
   currentWorkspaceName: null, // Nombre para títulos
   currentView: "mis-proyectos",
@@ -147,80 +136,6 @@ const changeView = function () {
     }`
   );
 };
-
-// --- LOGIC: DATA FETCHING ---
-//const getToken = () => localStorage.getItem("token");
-
-// FUNCIÓN DE FETCH GENERALIZADA (PARA GET, POST, PUT, DELETE)
-/*
-const apiRequest = async (endpoint, method = "GET", body = null) => {
-  const token = getToken();
-  // Validar token para métodos que no sean GET (excepto login/register que no pasan por aquí)
-  if (!token && method !== "GET") {
-    console.error("Token no encontrado para solicitud autenticada.");
-    // Considerar redirigir a login o mostrar mensaje
-    // window.location.href = "login.html";
-    throw new Error("Autenticación requerida.");
-  }
-
-  const options = {
-    method: method,
-    headers: {}, // Inicializar headers
-  };
-
-  if (token) {
-    options.headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  if (body) {
-    options.headers["Content-Type"] = "application/json";
-    options.body = JSON.stringify(body);
-  }
-
-  try {
-    const response = await fetch(`${BASE_API_URL}${endpoint}`, options);
-
-    // Manejo especial para respuestas sin contenido (ej. DELETE 204)
-    if (response.status === 204) {
-      return { success: true }; // Indica éxito sin datos
-    }
-
-    // Intentar parsear JSON solo si hay contenido
-    const contentType = response.headers.get("content-type");
-    let data;
-    if (contentType && contentType.indexOf("application/json") !== -1) {
-      data = await response.json();
-    } else {
-      // Si no es JSON, verificar si la respuesta fue OK igualmente (podría ser texto)
-      if (!response.ok) {
-        // Si no fue OK y no es JSON, lanzar error genérico
-        throw new Error(
-          `Error ${response.status}: Respuesta inesperada del servidor.`
-        );
-      }
-      // Si fue OK pero no JSON (raro para una API REST), devolver un estado simple
-      return { success: true, status: response.status };
-    }
-
-    if (!response.ok) {
-      // Usar el mensaje del JSON si existe, sino un mensaje genérico
-      throw new Error(
-        data.message ||
-          data.error ||
-          `Error ${response.status}: Fallo en la API.`
-      );
-    }
-    return data; // Devuelve los datos JSON para GET, POST, PUT
-  } catch (error) {
-    console.error(`Error en API ${method} ${endpoint}:`, error); // Loguear el error completo
-    // Mostrar error al usuario de forma más amigable
-    // Por ejemplo, podrías tener un div#error-message en tu HTML
-    // document.getElementById('error-message').textContent = `Error: ${error.message}`;
-    throw error; // Propagar el error para manejo específico si es necesario
-  }
-};*/
-
-// --- LOGIC: CONTENT RENDERING ---
 
 /**
  * Función para construir el HTML de la tarjeta simplificada (CLICABLE).
@@ -383,7 +298,13 @@ const openDetailsModal = (itemId, itemType) => {
   // Verificar si el usuario actual es el creador (para botones de admin/owner)
   const isOwner =
     appState.currentUser && appState.currentUser.id == itemData.created_by;
+  // Lógica para Workspaces
+  const isWorkspaceAdmin = itemData.current_user_role === "admin";
+  const canManageWorkspace = isOwner || isWorkspaceAdmin;
 
+  // Lógica para Proyectos
+  const isProjectAdmin = itemData.current_user_role === "admin";
+  const canManageProject = isOwner || isProjectAdmin;
   // 1. Botones de Acción Dinámicos (DEPENDEN DE itemType)
   let actionButtonsHTML = "";
   let modalTitle = "";
@@ -392,11 +313,14 @@ const openDetailsModal = (itemId, itemType) => {
     modalTitle = "Detalles del Proyecto 📋";
     // REQUISITO PROYECTOS: Editar, Eliminar (si es dueño), Ver Tareas
     actionButtonsHTML = `
-            <button class="btn btnEdit panelBtn" data-id="${
-              itemData.id
-            }" data-type="project">Editar</button>
             ${
-              isOwner
+              canManageProject
+                ? `
+            <button class="btn btnEdit panelBtn" data-id="${itemData.id}" data-type="project">Editar</button>`
+                : ""
+            }
+            ${
+              canManageProject
                 ? `<button class="btn btnDelete panelBtn" data-id="${itemData.id}" data-type="project">Eliminar</button>`
                 : ""
             }
@@ -406,19 +330,22 @@ const openDetailsModal = (itemId, itemType) => {
         `;
   } else if (itemType === "workspace") {
     modalTitle = "Detalles del Workspace 💼";
-    // REQUISITO WORKSPACES: Editar, Eliminar (si es dueño), Añadir Miembro (si es dueño y no personal), Ver Proyectos
+    // REQUISITO WORKSPACES: Editar, Eliminar (si es dueño), Gestionar Miembros (si es dueño y no personal), Ver Proyectos
     actionButtonsHTML = `
-            <button class="btn btnEdit panelBtn" data-id="${
-              itemData.id
-            }" data-type="workspace">Editar</button>
             ${
-              isOwner
+              canManageWorkspace
+                ? `
+                    <button class="btn btnEdit panelBtn" data-id="${itemData.id}" data-type="workspace">Editar</button>`
+                : ""
+            }
+            ${
+              canManageWorkspace
                 ? `<button class="btn btnDelete panelBtn" data-id="${itemData.id}" data-type="workspace">Eliminar</button>`
                 : ""
             }
             ${
-              isOwner && !itemData.is_personal
-                ? `<button class="btn btnAddMember panelBtn" data-id="${itemData.id}">Añadir Miembro</button>`
+              canManageWorkspace && !itemData.is_personal
+                ? `<button class="btn btnAddMember panelBtn" data-id="${itemData.id}">Gestionar Miembros</button>`
                 : ""
             }
             <button class="btn btnViewProjects panelBtn" data-id="${
@@ -657,41 +584,82 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     } else if (targetButton.classList.contains("btnDelete")) {
       if (!itemType) return console.error("Botón Eliminar sin data-type.");
+
+      // --- 1. Obtener los datos (esto es igual que tu código actual) ---
       const itemName =
         targetButton.closest(".detailsContent")?.querySelector("h2")
           ?.textContent ||
         (itemType === "project" ? "este proyecto" : "este workspace");
+
       const confirmMessage =
         itemType === "project"
           ? `¿Eliminar el proyecto "${itemName}"?`
-          : `¿Eliminar el workspace "${itemName}" y TODOS sus proyectos asociados?`; // Mensaje más claro para workspace
+          : `¿Eliminar el workspace "${itemName}" y TODOS sus proyectos asociados?`;
 
-      const confirmed = confirm(confirmMessage); // Reemplazar con modal no bloqueante
+      const endpoint = `/${itemType}s/${itemId}`;
 
-      if (confirmed) {
-        const endpoint = `/${itemType}s/${itemId}`; // /projects/:id o /workspaces/:id
-        try {
-          await apiRequest(endpoint, "DELETE");
-          console.log(`${itemType} ${itemId} eliminado.`);
-          closeAnyWindow();
-          // Limpiar cache y recargar vista
-          if (itemType === "project") appState.allProjects = [];
-          if (itemType === "workspace") appState.allWorkspaces = []; // Limpiar workspaces si se elimina uno
-          // Determinar a qué vista volver (si eliminamos workspace, volvemos a la lista)
-          const viewToRefresh =
-            itemType === "workspace" ? "workspaces" : appState.currentView;
-          await renderView(
-            viewToRefresh,
-            appState.currentWorkspaceId,
-            appState.currentWorkspaceName
-          );
-          // Si eliminamos workspace, actualizar hash
-          if (itemType === "workspace")
-            window.history.pushState(null, "", "#workspaces");
-        } catch (error) {
-          alert(`Error al eliminar ${itemType}: ${error.message}`); // Reemplazar alert
+      // --- 2. REEMPLAZO DEL 'confirm()' POR 'Swal.fire()' ---
+
+      // ANTES:
+      // const confirmed = confirm(confirmMessage);
+      // if (confirmed) {
+      //   try { ... } catch (e) { alert(...) }
+      // }
+
+      // AHORA (CORREGIDO):
+      Swal.fire({
+        title: "¿Estás seguro?",
+        text: confirmMessage, // Usamos tu mensaje dinámico
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, ¡eliminar!",
+        cancelButtonText: "Cancelar",
+      }).then(async (result) => {
+        // <-- La lógica de la API va DENTRO del .then()
+        if (result.isConfirmed) {
+          // Si el usuario hizo clic en "Sí, eliminar"
+          try {
+            await apiRequest(endpoint, "DELETE");
+
+            // Alerta de éxito
+            Swal.fire(
+              "¡Eliminado!",
+              `${
+                itemType === "project" ? "El proyecto" : "El workspace"
+              } ha sido eliminado.`,
+              "success"
+            );
+
+            closeAnyWindow();
+
+            // Limpiar cache y recargar vista (tu lógica actual)
+            if (itemType === "project") appState.allProjects = [];
+            if (itemType === "workspace") appState.allWorkspaces = [];
+
+            const viewToRefresh =
+              itemType === "workspace" ? "workspaces" : appState.currentView;
+
+            await renderView(
+              viewToRefresh,
+              appState.currentWorkspaceId,
+              appState.currentWorkspaceName
+            );
+
+            if (itemType === "workspace")
+              window.history.pushState(null, "", "#workspaces");
+          } catch (error) {
+            // Reemplazo del 'alert()' de error
+            Swal.fire(
+              "Error",
+              `Error al eliminar ${itemType}: ${error.message}`,
+              "error"
+            );
+          }
         }
-      }
+      });
+      // --- FIN DEL REEMPLAZO ---
     }
     // Botones Específicos de Proyecto
     else if (targetButton.classList.contains("btnViewTasks")) {
@@ -721,11 +689,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     // Botones Específicos de Workspace
     else if (targetButton.classList.contains("btnAddMember")) {
-      console.log(
-        `FUNCIONALIDAD FUTURA: Abrir modal para añadir miembro a workspace ID: ${itemId}`
-      );
-      // Aquí abrirías un nuevo modal o formulario para ingresar el email del miembro
-      closeAnyWindow(); // Cerrar modal de detalles por ahora
+      const workspaceId = itemId;
+
+      //Cierra el modal de detalles actual
+      closeAnyWindow();
+
+      //Llama al "especialista" de miembros (importado de workspaceMembers.js)
+      //    para que cree y muestre el nuevo modal de gestión.
+      renderMemberModal(workspaceId);
     } else if (targetButton.classList.contains("btnViewProjects")) {
       const workspaceName = targetButton.getAttribute("data-name");
       closeAnyWindow(); // Cierra modal detalles

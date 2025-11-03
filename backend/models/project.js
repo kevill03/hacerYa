@@ -85,13 +85,17 @@ export async function isProjectAdminOrCreator(projectId, userId) {
  */
 export async function getAllProjectsByUserId(userId) {
   const query = `
-        SELECT DISTINCT p.*, u.full_name AS created_by_name
+        SELECT DISTINCT 
+          p.*, 
+          u.full_name AS created_by_name,
+          pm_user.role_in_project AS current_user_role -- <--- LA LÍNEA MÁGICA
         FROM projects p
         INNER JOIN users u ON p.created_by = u.id
         LEFT JOIN project_members pm ON p.id = pm.project_id
+        -- Este join busca el rol del usuario actual en CADA proyecto
+        LEFT JOIN project_members pm_user ON p.id = pm_user.project_id AND pm_user.user_id = $1
         WHERE p.created_by = $1 OR pm.user_id = $1
-        ORDER BY p.created_at DESC;
-    `;
+        ORDER BY p.created_at DESC;`.trim();
   const { rows } = await pool.query(query, [userId]);
   return rows;
 }
