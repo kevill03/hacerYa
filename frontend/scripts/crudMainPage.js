@@ -405,6 +405,13 @@ const renderView = async (
     appState.currentWorkspaceName = null;
   }
 
+  // --- INICIO DE LA CORRECCIÓN ---
+  // Resetea el botón "Alternar Vista" para que sea visible por defecto
+  // en las vistas que lo usan (proyectos y workspaces).
+  // Tu lógica de 'createActionButton' ya se maneja dentro de cada función.
+  btnChangeView.forEach((btn) => (btn.style.display = "flex"));
+  // --- FIN DE LA CORRECCIÓN ---
+
   // Ejecutar la función de renderizado correspondiente
   switch (viewName) {
     case "mis-proyectos":
@@ -415,6 +422,9 @@ const renderView = async (
       break;
     case "admin-dashboard":
       mainContentArea.innerHTML = getStatsHTML(); // Síncrono
+      // CORRECCIÓN: Oculta ambos botones en admin
+      createActionButton.style.display = "none";
+      btnChangeView.forEach((btn) => (btn.style.display = "none"));
       break;
     case "viewWorkspaceProjects":
       await renderProjects(workspaceId, workspaceName); // Espera a que termine
@@ -423,7 +433,7 @@ const renderView = async (
     case "kanban":
       // Ocultar el botón de "Crear Proyecto/Workspace"
       createActionButton.style.display = "none";
-      // Opcional: Ocultar el botón de "Alternar Vista" si no aplica
+      // Ocultar el botón de "Alternar Vista"
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
 
       // El director llama al especialista del Kanban
@@ -432,7 +442,9 @@ const renderView = async (
     // --- FIN DE LA ADICIÓN ---
     default:
       mainContentArea.innerHTML = "<h2>Vista no encontrada.</h2>";
+      // CORRECCIÓN: Oculta ambos botones si la vista no se encuentra
       createActionButton.style.display = "none";
+      btnChangeView.forEach((btn) => (btn.style.display = "none"));
   }
 
   // Actualizar Sidebar activo
