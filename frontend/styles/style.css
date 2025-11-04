@@ -800,3 +800,74 @@ a.flexContainer {
   background-color: #eee;
   color: #dc3545;
 }
+
+/* ==================================================================== */
+/* --- ESTILOS PARA EL MODAL DE TAREAS (taskManager.js) --- */
+/* ==================================================================== */
+
+/* 1. Ajustes generales al formulario de tareas */
+#taskForm {
+  gap: 0.5rem; /* Más espacio entre los campos */
+}
+
+/* 2. Estilos para las etiquetas (Labels) */
+#taskForm label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white; /* Coincide con tu #formTitle */
+  margin-bottom: 3px; /* Pequeño espacio sobre el input */
+}
+
+/* 3. Anulación del .inputGroup (para apilar label/input) */
+/* (Tu .inputGroup por defecto usa space-between, lo cual no queremos aquí) */
+#taskForm .inputGroup {
+  flex-direction: column; /* Apila la etiqueta encima del input */
+  align-items: flex-start; /* Alinea la etiqueta a la izquierda */
+  width: 100%;
+  gap: 5px; /* Espacio entre etiqueta e input */
+}
+
+/* 4. Estilos para los nuevos <select> y <input type="date"> */
+/* (Haciendo que coincidan con tus .createActionForm input) */
+#taskForm select,
+#taskForm input[type="date"] {
+  width: 100%;
+  margin: 1px;
+  border: #ffffff solid 2px;
+  border-radius: 5px;
+  padding: 5px;
+
+  /* Añadimos una altura y fuente consistentes */
+  height: 45px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  color: #333; /* Color de texto legible */
+}
+
+/* 5. Estilo de :focus (copiado de tu .createActionForm:focus) */
+#taskForm select:focus,
+#taskForm input[type="date"]:focus {
+  outline: none;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.664);
+}
+
+/* 6. Estilos para la fila de 2 columnas (.input-row) */
+.input-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1.2rem;
+  width: 100%;
+}
+
+/* 7. Estilo del botón de submit */
+#submitTaskBtn {
+  margin-top: 1rem; /* Espacio extra antes del botón */
+}
+
+#taskFormTitle {
+  color: white;
+}
+#taskModal {
+  padding: 2rem;
+}

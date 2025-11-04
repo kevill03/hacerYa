@@ -123,7 +123,63 @@
                 class="actionIcon"
               />
           </form>
+    </div>
+    <div class="createWindow hidden" id="taskModal">
+      <button class="closeWindow">&times;</button>
+      <h1 id="taskFormTitle">Crear Nueva Tarea</h1>
+      
+      <form id="taskForm" class="createActionForm flexContainer">
+        <input type="hidden" id="taskId" />
 
+        <div class="inputGroup flexContainer">
+          <label for="taskTitle">Título</label>
+          <input type="text" id="taskTitle" placeholder="Nombre de la tarea" required />
+        </div>
+
+        <div class="inputGroup flexContainer">
+          <label for="taskDescription">Descripción</label>
+          <textarea id="taskDescription" placeholder="Añade una descripción..."></textarea>
+        </div>
+
+        <div class="input-row flexContainer">
+          <div class="inputGroup flexContainer">
+            <label for="taskStatusSelect">Estado</label>
+            <select id="taskStatusSelect">
+              <option value="Por hacer">Por hacer</option>
+              <option value="En progreso">En progreso</option>
+              <option value="En revisión">En revisión</option>
+              <option value="Hecho">Hecho</option>
+            </select>
+          </div>
+          
+          <div class="inputGroup flexContainer">
+            <label for="taskPrioritySelect">Prioridad</label>
+            <select id="taskPrioritySelect">
+              <option value="Baja">Baja</option>
+              <option value="Media" selected>Media</option>
+              <option value="Alta">Alta</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="input-row flexContainer">
+          <div class="inputGroup flexContainer">
+            <label for="taskAssigneeSelect">Asignar a</label>
+            <select id="taskAssigneeSelect">
+              <option value="">(Sin asignar)</option>
+              </select>
+          </div>
+          
+          <div class="inputGroup flexContainer">
+            <label for="taskDueDate">Fecha Límite</label>
+            <input type="date" id="taskDueDate" />
+          </div>
+        </div>
+        
+        <button id="submitTaskBtn" class="btn flexContainer mainActionBtn" type="submit">
+          Crear Tarea
+        </button>
+      </form>
     </div>
     <div class="overlay hidden"></div>
   </body>

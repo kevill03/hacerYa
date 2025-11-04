@@ -1,68 +1,70 @@
 import { apiRequest } from "./api.js";
+import { appState } from "./crudMainPage.js"; // Necesitamos el appState para el refresh
+
+// --- 1. FUNCIÓN PRINCIPAL DE RENDERIZADO (CORREGIDA) ---
+
 export async function renderKanbanBoard(container, projectId) {
   try {
-    // 1. Mostrar un 'Cargando...'
     container.innerHTML = `<p>Cargando tareas...</p>`;
 
-    // 2. Buscar los datos de la API
-    // --- INICIO DE LA CORRECCIÓN ---
-    const response = await apiRequest(`/projects/${projectId}/tasks`, "GET");
-    const tasks = response.data; // <-- ¡AQUÍ ESTÁ EL ARREGLO!
+    // --- CORRECCIÓN ---
+    // Ahora cargamos Tareas y Miembros en paralelo
+    const [tasksResponse, membersResponse] = await Promise.all([
+      apiRequest(`/projects/${projectId}/tasks`, "GET"),
+      apiRequest(`/projects/${projectId}/members`, "GET"),
+    ]);
 
-    // Dejamos esto vacío por ahora, ya que el endpoint /members no existe
-    const members = [];
+    const tasks = tasksResponse.data;
+    const members = membersResponse.data;
     // --- FIN DE LA CORRECCIÓN ---
 
-    // 3. Construir el esqueleto del Kanban
     const kanbanHTML = `
       <div class="kanban-container">
         <div class="kanban-column" id="col-por-hacer" data-status="Por hacer">
           <h3>Por Hacer</h3>
-          <div class="kanban-tasks-list"></div>
+          <div class="kanban-tasks-list" data-status="Por hacer"></div>
           <button class="add-task-btn">+ Añadir tarea</button>
         </div>
         <div class="kanban-column" id="col-en-progreso" data-status="En progreso">
           <h3>En Progreso</h3>
-          <div class="kanban-tasks-list"></div>
+          <div class="kanban-tasks-list" data-status="En progreso"></div>
         </div>
         <div class="kanban-column" id="col-en-revision" data-status="En revisión">
           <h3>En Revisión</h3>
-          <div class="kanban-tasks-list"></div>
+          <div class="kanban-tasks-list" data-status="En revisión"></div>
         </div>
         <div class="kanban-column" id="col-hecho" data-status="Hecho">
           <h3>Hecho</h3>
-          <div class="kanban-tasks-list"></div>
+          <div class="kanban-tasks-list" data-status="Hecho"></div>
         </div>
       </div>
     `;
 
-    // 4. Inyectar el esqueleto en el contenedor
     container.innerHTML = kanbanHTML;
 
-    // 5. Poblar las columnas con las tareas
     if (tasks && Array.isArray(tasks)) {
-      // Verificación de seguridad
       tasks.forEach((task) => {
         const taskCard = createTaskCard(task);
-        const column = container.querySelector(
-          `[data-status="${task.status}"] .kanban-tasks-list`
+        const columnList = container.querySelector(
+          `.kanban-tasks-list[data-status="${task.status}"]`
         );
-        if (column) {
-          column.innerHTML += taskCard;
+        if (columnList) {
+          columnList.innerHTML += taskCard;
         }
       });
     }
 
-    // 6. Añadir los Event Listeners
+    // Pasamos los miembros a los listeners
     addKanbanEventListeners(container, projectId, members);
   } catch (error) {
     console.error("Error al renderizar el Kanban:", error);
-    container.innerHTML = `<p class="error">Error al cargar las tareas.</p>`;
+    container.innerHTML = `<p class="error">Error al cargar las tareas: ${error.message}</p>`;
   }
 }
 
+// --- 2. FUNCIÓN PARA CREAR TARJETAS (SIN CAMBIOS) ---
+
 function createTaskCard(task) {
-  // Genera el HTML para una sola tarjeta de tarea
   return `
     <div class="task-card" draggable="true" data-task-id="${task.id}">
       <h4>${task.title}</h4>
@@ -76,41 +78,229 @@ function createTaskCard(task) {
   `;
 }
 
+// --- 3. MANEJADORES DE EVENTOS (IMPLEMENTACIÓN COMPLETA) ---
+
 function addKanbanEventListeners(container, projectId, members) {
-  // Aquí va toda la lógica para:
-  // - Clic en "Añadir tarea" (abre el modal de crear tarea)
-  // - Clic en una tarjeta (abre el modal de editar detalles)
-  // - Eventos de Drag & Drop (ondragstart, ondragover, ondrop)
-  // - La llamada a la API con PATCH /status cuando se suelta una tarjeta
-
-  // Ejemplo de listener de Drop
   const columns = container.querySelectorAll(".kanban-column");
-  columns.forEach((column) => {
-    column.addEventListener("dragover", (e) => {
-      e.preventDefault(); // Necesario para permitir el drop
-    });
-
-    column.addEventListener("drop", async (e) => {
-      e.preventDefault();
-      const taskId = e.dataTransfer.getData("text/plain");
-      const newStatus = column.dataset.status;
-
-      console.log(`Moviendo tarea ${taskId} a ${newStatus}`);
-
-      // Aquí harías el PATCH a la API
-      // await apiRequest(`/projects/${projectId}/tasks/${taskId}/status`, 'PATCH', { status: newStatus });
-
-      // Mover el elemento en el DOM (lógica de UI)
-      const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-      column.querySelector(".kanban-tasks-list").appendChild(taskElement);
-    });
-  });
-
-  // Ejemplo de listener de Drag
+  const taskLists = container.querySelectorAll(".kanban-tasks-list");
   const cards = container.querySelectorAll(".task-card");
+  const addButtons = container.querySelectorAll(".add-task-btn");
+
+  // --- A. Eventos de Drag & Drop (Arrastrar y Soltar) ---
+
   cards.forEach((card) => {
     card.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", card.dataset.taskId);
+      setTimeout(() => card.classList.add("dragging"), 0);
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
     });
   });
+
+  taskLists.forEach((list) => {
+    list.addEventListener("dragover", (e) => {
+      e.preventDefault(); // Necesario para permitir el drop
+      const draggingCard = document.querySelector(".dragging");
+      if (draggingCard) {
+        list.appendChild(draggingCard);
+      }
+    });
+
+    list.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      const taskId = e.dataTransfer.getData("text/plain");
+      const newStatus = list.dataset.status;
+      const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+
+      // Mover el elemento en el DOM (ya se hizo en dragover, pero confirmamos)
+      list.appendChild(taskElement);
+
+      // Llamada a la API
+      try {
+        await apiRequest(
+          `/projects/${projectId}/tasks/${taskId}/status`,
+          "PATCH",
+          { status: newStatus }
+        );
+        // Opcional: Pequeña confirmación de éxito no intrusiva
+      } catch (error) {
+        console.error("Error al mover la tarea:", error);
+        Swal.fire(
+          "Error",
+          `No se pudo mover la tarea: ${error.message}`,
+          "error"
+        );
+        // TODO: Devolver la tarjeta a su columna original si falla la API
+      }
+    });
+  });
+
+  // --- B. Clic en "Añadir tarea" ---
+  addButtons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+      const status = e.target.closest(".kanban-column").dataset.status;
+      openTaskModal(null, projectId, status, members); // null = Modo Creación
+    });
+  });
+
+  // --- C. Clic en una tarjeta (para Editar) ---
+  cards.forEach((card) => {
+    card.addEventListener("click", (e) => {
+      const taskId = e.target.closest(".task-card").dataset.taskId;
+      openTaskModal(taskId, projectId, null, members); // taskId = Modo Edición
+    });
+  });
+}
+
+// --- 4. LÓGICA DEL MODAL DE TAREAS (¡NUEVO!) ---
+// (Asume que el HTML del modal está en mainPage.html con id="taskModal")
+
+const taskModal = document.getElementById("taskModal");
+const taskForm = document.getElementById("taskForm");
+const taskFormTitle = document.getElementById("taskFormTitle");
+const submitTaskBtn = document.getElementById("submitTaskBtn");
+const taskAssigneeSelect = document.getElementById("taskAssigneeSelect");
+
+/**
+ * Abre el modal de Tareas, sea para Crear o Editar.
+ */
+async function openTaskModal(taskId, projectId, status, members) {
+  const form = taskForm; // Referencia al formulario
+  form.reset(); // Limpiar el formulario
+
+  // Poblar el <select> de miembros
+  taskAssigneeSelect.innerHTML = '<option value="">(Sin asignar)</option>'; // Resetear
+  if (members && Array.isArray(members)) {
+    members.forEach((member) => {
+      taskAssigneeSelect.innerHTML += `
+        <option value="${member.id}">${member.full_name}</option>
+      `;
+    });
+  }
+
+  // Almacenar IDs para el submit
+  form.dataset.projectId = projectId;
+
+  if (taskId) {
+    // --- MODO EDICIÓN ---
+    taskFormTitle.textContent = "Editar Tarea";
+    submitTaskBtn.textContent = "Guardar Cambios";
+    form.dataset.taskId = taskId; // Guardar el ID de la tarea
+
+    try {
+      // Cargar datos de la tarea
+      const response = await apiRequest(
+        `/projects/${projectId}/tasks/${taskId}`,
+        "GET"
+      );
+      const task = response.data;
+
+      // Rellenar el formulario
+      document.getElementById("taskTitle").value = task.title;
+      document.getElementById("taskDescription").value = task.description || "";
+      document.getElementById("taskStatusSelect").value = task.status;
+      document.getElementById("taskPrioritySelect").value = task.priority;
+      document.getElementById("taskAssigneeSelect").value =
+        task.assigned_to || "";
+      document.getElementById("taskDueDate").value = task.due_date
+        ? task.due_date.split("T")[0]
+        : ""; // Formatear fecha
+    } catch (error) {
+      Swal.fire(
+        "Error",
+        `No se pudieron cargar los datos de la tarea: ${error.message}`,
+        "error"
+      );
+      return;
+    }
+  } else {
+    // --- MODO CREACIÓN ---
+    taskFormTitle.textContent = "Crear Nueva Tarea";
+    submitTaskBtn.textContent = "Crear Tarea";
+    form.dataset.taskId = ""; // Limpiar el ID
+
+    // Asignar el estado de la columna donde se hizo clic
+    if (status) {
+      document.getElementById("taskStatusSelect").value = status;
+    }
+  }
+
+  // Mostrar el modal
+  taskModal.classList.remove("hidden");
+  document.querySelector(".overlay").classList.remove("hidden");
+
+  // Añadir listeners (solo una vez)
+  taskModal
+    .querySelector(".closeWindow")
+    .addEventListener("click", closeTaskModal, { once: true });
+  document
+    .querySelector(".overlay")
+    .addEventListener("click", closeTaskModal, { once: true });
+  form.addEventListener("submit", handleTaskFormSubmit, { once: true });
+}
+
+/**
+ * Cierra y resetea el modal de tareas.
+ */
+function closeTaskModal() {
+  taskModal.classList.add("hidden");
+  document.querySelector(".overlay").classList.add("hidden");
+  // Limpiamos el listener del formulario para evitar envíos duplicados
+  taskForm.removeEventListener("submit", handleTaskFormSubmit);
+}
+
+/**
+ * Maneja el envío (submit) del formulario de Tarea (Crear o Editar).
+ */
+async function handleTaskFormSubmit(e) {
+  e.preventDefault();
+
+  // Obtener IDs
+  const projectId = e.target.dataset.projectId;
+  const taskId = e.target.dataset.taskId;
+
+  // Determinar si es CREAR (POST) o EDITAR (PUT)
+  const isEditing = !!taskId;
+  const method = isEditing ? "PUT" : "POST";
+  const endpoint = isEditing
+    ? `/projects/${projectId}/tasks/${taskId}`
+    : `/projects/${projectId}/tasks`;
+
+  // Construir el payload
+  const payload = {
+    title: document.getElementById("taskTitle").value,
+    description: document.getElementById("taskDescription").value,
+    status: document.getElementById("taskStatusSelect").value,
+    priority: document.getElementById("taskPrioritySelect").value,
+    assigned_to: document.getElementById("taskAssigneeSelect").value || null, // Enviar null si está "Sin asignar"
+    due_date: document.getElementById("taskDueDate").value || null, // Enviar null si está vacío
+  };
+
+  // En modo CREAR, el project_id va en el payload (ya lo hace el backend)
+  // En modo EDITAR, no es necesario.
+
+  try {
+    await apiRequest(endpoint, method, payload);
+
+    Swal.fire(
+      isEditing ? "¡Actualizado!" : "¡Creado!",
+      "La tarea ha sido guardada.",
+      "success"
+    );
+
+    closeTaskModal();
+
+    // --- ¡IMPORTANTE! Refrescar el Kanban para ver el cambio ---
+    const mainContainer = document.querySelector(".mainData");
+    // Volvemos a llamar a renderKanbanBoard para recargar todo
+    await renderKanbanBoard(mainContainer, projectId);
+  } catch (error) {
+    console.error("Error al guardar la tarea:", error);
+    Swal.fire(
+      "Error",
+      `No se pudo guardar la tarea: ${error.message}`,
+      "error"
+    );
+  }
 }
