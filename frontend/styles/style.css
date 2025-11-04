@@ -359,6 +359,7 @@ a.flexContainer {
 .mainPanel {
   flex-direction: column;
   flex-grow: 8;
+  min-width: 0;
 }
 .homeContainer {
   height: 100%;
@@ -476,16 +477,15 @@ a.flexContainer {
 
 /* Contenedor principal de las listas (Grid vs Flex) */
 .mainData {
-  /* Asegura que el contenido ocupe el espacio disponible y permite desplazamiento */
-  align-items: flex-start; /* Alinea los ítems a la izquierda */
+  align-items: flex-start;
   justify-content: flex-start;
-  flex-direction: row; /* Permite que las tarjetas fluyan */
+  flex-direction: row;
   flex-wrap: wrap;
   padding: 20px;
-  gap: 20px; /* Espacio entre las tarjetas */
+  gap: 20px;
   width: 100%;
-  height: 100%;
-  /* Quitamos el borde negro que tenías para que quede más limpio */
+  flex-grow: 1;
+  min-height: 0;
   border: none;
   max-width: 100%;
   overflow-y: auto; /* Permite hacer scroll si hay muchas tarjetas */
@@ -495,38 +495,34 @@ a.flexContainer {
 .project-card,
 .workspace-card,
 .card-details {
-  /* 1. Fondo, Sombra y Radio Amigable */
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   padding: 20px;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
-  flex-direction: column; /* Apila el título y la descripción */
-  align-items: flex-start; /* Alinea todo a la izquierda */
+  flex-direction: column;
+  align-items: flex-start;
   gap: 5px;
-
-  /* 2. Ancho: Ocupar todo el espacio cuando es FLEX */
+  /*Ocupar todo el espacio cuando es FLEX */
   width: 100%;
   min-height: 80px;
 }
 
 .card-details:hover {
-  transform: translateY(-3px); /* Efecto 3D al pasar el mouse */
+  transform: translateY(-3px);
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
 /* Estilo de Contenido Interno */
 .card-details h3 {
-  /* Título más grande y en la izquierda */
   font-size: 1.4rem;
   font-weight: 600;
-  color: #640093; /* Color de tu marca */
+  color: #640093;
   margin: 0;
 }
 
 .card-details p.description-short {
-  /* Descripción más pequeña */
   font-size: 0.9rem;
   color: #555;
   margin: 0;
@@ -870,4 +866,144 @@ a.flexContainer {
 }
 #taskModal {
   padding: 2rem;
+}
+
+/* ==================================================================== */
+/* --- ESTILOS PARA EL KANBAN BOARD (taskManager.js) --- */
+/* ==================================================================== */
+
+/* 1. Contenedor Principal del Kanban
+   (Ocupa todo el espacio de .mainData y permite scroll horizontal) */
+.kanban-container {
+  display: flex;
+  flex-direction: row; /* Apila las columnas horizontalmente */
+  width: 100%;
+  height: 100%; /* Ocupa toda la altura de .mainData */
+  overflow-x: auto; /* Permite scroll HORIZONTAL si las columnas no caben */
+  overflow-y: hidden; /* Evita el scroll vertical del contenedor */
+  padding: 10px;
+  gap: 20px; /* Espacio entre columnas */
+  min-width: 0; /* Forza al contenedor a obedecer su 'width: 100%' */
+}
+
+/* 2. Columnas Individuales (Por Hacer, En Progreso, etc.) */
+.kanban-column {
+  display: flex;
+  flex-direction: column; /* Apila Título, Lista y Botón */
+
+  /* Sizing: Cada columna tiene un ancho fijo y no se encoge */
+  flex-shrink: 0;
+  width: 300px; /* Ancho fijo para cada columna */
+  height: 100%; /* Ocupa toda la altura disponible */
+
+  /* Apariencia: Reutiliza el color de fondo de tu body */
+  background-color: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+}
+
+/* Título de la Columna (H3) */
+.kanban-column h3 {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* 3. Lista de Tareas (El área de scroll) */
+.kanban-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Espacio entre tarjetas */
+
+  /* ¡CLAVE! Esto hace que la lista ocupe el espacio sobrante */
+  flex-grow: 1;
+  overflow-y: auto; /* ¡SOLO esta lista tendrá scroll vertical! */
+
+  /* Truco de Flexbox para que el scroll funcione correctamente */
+  min-height: 0;
+
+  /* Relleno para que las tarjetas no toquen los bordes */
+  padding: 5px;
+}
+
+/* 4. Tarjetas de Tarea (Reutiliza tu estilo .project-card) */
+.task-card {
+  /* Apariencia */
+  background-color: white;
+  border-radius: 8px; /* Un poco más pequeño que las tarjetas de proyecto */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  cursor: grab; /* Indica que se puede arrastrar */
+  transition: all 0.2s ease;
+
+  /* Layout Interno */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Contenido de la tarjeta */
+.task-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #640093; /* Tu color de marca principal */
+}
+
+.task-card p {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0;
+}
+
+/* "Píldora" para el usuario asignado (reusa tus colores de sidebar) */
+.task-assignee {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1a73e8; /* Tu color de sidebar activo */
+  background-color: #e8f0fe; /* Tu color de sidebar hover */
+  padding: 3px 8px;
+  border-radius: 12px;
+  align-self: flex-start; /* Se alinea a la izquierda */
+}
+
+/* 5. Botón de "Añadir Tarea" */
+.add-task-btn {
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #640093;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+
+  /* Evita que el botón se encoja */
+  flex-shrink: 0;
+}
+
+.add-task-btn:hover {
+  background-color: #c0d4f7; /* Tu color de sidebar hover */
+  color: #026cf7;
+}
+
+/* 6. Efecto visual al arrastrar */
+.task-card.dragging {
+  opacity: 0.5;
+  transform: rotate(3deg) scale(1.03);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
