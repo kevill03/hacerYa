@@ -1,8 +1,8 @@
 "use strict";
-// ---- Import funciones de tareas y miembros de workspaces Cambio 01/11/2025---------
 import { renderKanbanBoard } from "./taskManager.js";
 import { apiRequest } from "./api.js";
 import { renderMemberModal } from "./workspaceMembers.js";
+import { renderProjectMemberModal } from "./projectMembers.js";
 //------------------------------------------------------------
 // Declaraciones de los DOS MODALES y sus elementos
 const createModal = document.querySelector(".createWindow"); // Modal de Creación
@@ -282,9 +282,7 @@ const getStatsHTML = () => {
 };
 
 // --- Modal de Detalles (AHORA GENERALIZADO) ---
-// --- Modal de Detalles (AHORA GENERALIZADO) ---
 const openDetailsModal = (itemId, itemType) => {
-  // <-- CORRECCIÓN: Firma restaurada
   // Buscar el objeto completo: Buscar en el cache de proyectos o workspaces
   const dataCache =
     itemType === "project" ? appState.allProjects : appState.allWorkspaces;
@@ -323,6 +321,11 @@ const openDetailsModal = (itemId, itemType) => {
             ${
               canManageProject
                 ? `<button class="btn btnDelete panelBtn" data-id="${itemData.id}" data-type="project">Eliminar</button>`
+                : ""
+            }
+            ${
+              canManageProject && !itemData.is_personal
+                ? `<button class="btn btnAddProjectMember panelBtn" data-id="${itemData.id}">Gestionar Miembros</button>`
                 : ""
             }
             <button class="btn btnViewTasks panelBtn" data-id="${
@@ -699,6 +702,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.history.pushState(null, "", `#projects/${projectId}/tasks`);
       }
       //----Fin cambio----------
+    }
+    // Botón Específico de Proyecto (Gestionar Miembros)
+    else if (targetButton.classList.contains("btnAddProjectMember")) {
+      const projectId = itemId;
+      closeAnyWindow(); // Cierra el modal de detalles
+
+      // Llama al nuevo especialista de miembros de PROYECTO
+      renderProjectMemberModal(projectId);
     }
     // Botones Específicos de Workspace
     else if (targetButton.classList.contains("btnAddMember")) {

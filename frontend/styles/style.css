@@ -619,32 +619,40 @@ a.flexContainer {
 }
 
 /* Botón Añadir Miembro (Secundario/Información) */
-.detailActions .btnAddMember {
+.detailActions .btnAddMember,
+.btnAddProjectMember {
   background-color: #ffc107; /* Amarillo/Naranja */
   color: #333;
 }
 /* ==================================================================== */
-/* --- ESTILOS PARA EL MODAL DE GESTIÓN DE MIEMBROS (workspaceMembers.js) --- */
+/* --- ESTILOS PARA AMBOS MODALES DE GESTIÓN DE MIEMBROS --- */
 /* ==================================================================== */
 
-/* 1. Ajustes al formulario de "Añadir Miembro" */
-#addMemberForm {
+/* 1. Ajustes al formulario de "Añadir Miembro" (para AMBOS modales) */
+#addMemberForm,
+#addProjectMemberForm {
   margin-bottom: 0.5rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 2rem;
   gap: 0.5rem;
 }
 
-#addMemberForm .inputGroup {
+#addMemberForm .inputGroup,
+#addProjectMemberForm .inputGroup {
   gap: 0.5rem;
 }
 
-#memberEmailInput {
+/* Hacer que el input de email ocupe el espacio disponible */
+#memberEmailInput,
+#projectMemberEmailInput {
   flex-grow: 1;
 }
 
+/* Estilos para el input y el select (para AMBOS modales) */
 #memberEmailInput,
-#memberRoleSelect {
+#memberRoleSelect,
+#projectMemberEmailInput,
+#projectMemberRoleSelect {
   padding: 1px 1px;
   height: 45px;
   border: 1px solid #ccc;
@@ -655,13 +663,17 @@ a.flexContainer {
 }
 
 #memberEmailInput:focus,
-#memberRoleSelect:focus {
+#memberRoleSelect:focus,
+#projectMemberEmailInput:focus,
+#projectMemberRoleSelect:focus {
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(6, 9, 202, 0.2);
 }
 
-#addMemberForm button[type="submit"] {
+/* Estilo para el botón de submit 'Añadir Miembro' (para AMBOS modales) */
+#addMemberForm button[type="submit"],
+#addProjectMemberForm button[type="submit"] {
   padding: 5px 10px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -674,14 +686,22 @@ a.flexContainer {
   transition: all 0.3s;
 }
 
-#addMemberForm button[type="submit"]:hover {
+#addMemberForm button[type="submit"]:hover,
+#addProjectMemberForm button[type="submit"]:hover {
   transform: scale(1.03);
 }
 
-/* 2. Estilos para la Lista de Miembros Actuales */
+/* 2. Estilos para la Lista de Miembros Actuales (REUTILIZADOS) */
+/* (El resto de tu CSS usa clases, así que no necesita cambios) */
 .members-list-container {
   width: 100%;
   margin-top: 0.5rem;
+  /* (Añadido para el layout del scroll) */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .members-list-container h3 {
@@ -689,6 +709,8 @@ a.flexContainer {
   font-weight: 600;
   color: #333;
   margin-bottom: 0.5rem;
+  /* (Añadido para el layout del scroll) */
+  flex-shrink: 0;
 }
 
 .members-list {
@@ -698,7 +720,10 @@ a.flexContainer {
   overflow-y: auto; /* El scroll de la lista */
   border: 1px solid #eee;
   border-radius: 8px;
-  max-height: 150px;
+  /* (Modificado para el layout del scroll) */
+  flex-grow: 1;
+  min-height: 0;
+  max-height: 150px; /* Límite de altura para la lista */
 }
 
 /* Estilo para cada fila de miembro */
