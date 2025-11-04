@@ -433,13 +433,14 @@ const renderView = async (
     case "viewWorkspaceProjects":
       await renderProjects(workspaceId, workspaceName); // Espera a que termine
       break;
-    //------ Nuevo caso para vista de tareas 01/11/2025-------------
     case "kanban":
       // Ocultar el botón de "Crear Proyecto/Workspace"
       createActionButton.style.display = "none";
       // Ocultar el botón de "Alternar Vista"
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
-
+      //Forzar que se mantenga con display:flex
+      mainContentArea.classList.add("flexContainer");
+      mainContentArea.classList.remove("gridContainer");
       // El director llama al especialista del Kanban
       await renderKanbanBoard(mainContentArea, projectId);
       break;
@@ -613,16 +614,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           : `¿Eliminar el workspace "${itemName}" y TODOS sus proyectos asociados?`;
 
       const endpoint = `/${itemType}s/${itemId}`;
-
-      // --- 2. REEMPLAZO DEL 'confirm()' POR 'Swal.fire()' ---
-
-      // ANTES:
-      // const confirmed = confirm(confirmMessage);
-      // if (confirmed) {
-      //   try { ... } catch (e) { alert(...) }
-      // }
-
-      // AHORA (CORREGIDO):
       Swal.fire({
         title: "¿Estás seguro?",
         text: confirmMessage, // Usamos tu mensaje dinámico
