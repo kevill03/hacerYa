@@ -399,7 +399,8 @@ const renderView = async (
   viewName,
   workspaceId = null,
   workspaceName = null,
-  projectId = null
+  projectId = null,
+  projectName = null
 ) => {
   appState.currentView = viewName; // Actualizar vista actual
 
@@ -438,6 +439,12 @@ const renderView = async (
       createActionButton.style.display = "none";
       // Ocultar el botón de "Alternar Vista"
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
+      // Si estamos en un workspace, usa su nombre. Si no (proyecto personal), usa "Personal".
+      const wsName = appState.currentWorkspaceName || "Personal";
+      const projName = projectName || "Tareas"; // Fallback por si el nombre no llega
+      console.log(projName);
+      subtitleElement.textContent = `${wsName} | ${projName}`;
+      document.title = `${subtitleElement.textContent} | HacerYA`;
       //Forzar que se mantenga con display:flex
       mainContentArea.classList.add("flexContainer");
       mainContentArea.classList.remove("gridContainer");
@@ -670,19 +677,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     // Botones Específicos de Proyecto
     else if (targetButton.classList.contains("btnViewTasks")) {
-      console.log(`FUNCIONALIDAD FUTURA: Kanban para proyecto ID: ${itemId}`);
       closeAnyWindow();
-      //-----Nuevo cambio 01/11/2025-----------------
       const projectId = itemId;
-      // Llamamos al router principal para que cargue la vista Kanban
-      await renderView("kanban", null, null, projectId);
 
-      // Actualizamos el hash del navegador
+      // 1. Obtenemos el nombre del proyecto desde el H2 del modal
       const projectName =
         targetButton.closest(".detailsContent")?.querySelector("h2")
           ?.textContent || "Proyecto";
-      document.title = `Kanban - ${projectName} | HacerYA`;
-      // (Asumiendo que appState.currentWorkspaceId está seteado si venimos de un workspace)
+
+      // 2. ¡CORRECCIÓN! Pasamos los 5 argumentos a renderView:
+      await renderView(
+        "kanban",
+        appState.currentWorkspaceId, // (El ID del workspace o null si es personal)
+        appState.currentWorkspaceName, // (El Nombre del workspace o null)
+        projectId,
+        projectName // <-- El nuevo parámetro que acabamos de añadir
+      );
+
+      // 3. La lógica del hash se queda aquí
       if (appState.currentWorkspaceId) {
         window.history.pushState(
           null,
@@ -692,7 +704,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         window.history.pushState(null, "", `#projects/${projectId}/tasks`);
       }
-      //----Fin cambio----------
     }
     // Botón Específico de Proyecto (Gestionar Miembros)
     else if (targetButton.classList.contains("btnAddProjectMember")) {
