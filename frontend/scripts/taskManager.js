@@ -267,7 +267,7 @@ async function openTaskModal(taskId, projectId, status, members) {
     taskFormTitle.textContent = "Crear Nueva Tarea";
     submitTaskBtn.textContent = "Crear Tarea";
     form.dataset.taskId = ""; // Limpiar el ID
-
+    deleteBtn.style.display = "none";
     // Asignar el estado de la columna donde se hizo clic
     if (status) {
       document.getElementById("taskStatusSelect").value = status;

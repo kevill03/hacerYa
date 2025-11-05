@@ -868,6 +868,8 @@ a.flexContainer {
 }
 #deleteTaskBtn {
   background-color: #dc3545;
+  display: none;
+  width: 100%;
 }
 #taskFormTitle {
   color: white;
