@@ -1,4 +1,4 @@
-const PROD_API_URL = "https://hacerya.onrender.com"; // Tu URL real
+const PROD_API_URL = "https://hacerya.onrender.com";
 const DEV_API_URL = "http://localhost:3000";
 
 const BASE_API_URL =
@@ -19,9 +19,8 @@ document.querySelector(".loginBtn").addEventListener("click", async () => {
   // Alerta de "Cargando..." con el contexto de Render
   Swal.fire({
     title: "Conectando con el servidor...",
-    // Usamos 'html' para un mejor formato
     html: `
-      ¡Gracias por tu paciencia! 🙏
+      ¡Gracias por tu paciencia!
       <br><br>
       <small style="font-size: 0.8em; line-height: 1.4;">
         Este es un proyecto universitario. El servidor gratuito (Render) 
@@ -32,10 +31,9 @@ document.querySelector(".loginBtn").addEventListener("click", async () => {
     `,
     allowOutsideClick: false,
     didOpen: () => {
-      Swal.showLoading(); // Muestra la animación de carga
+      Swal.showLoading();
     },
   });
-  // --- 👆 FIN DEL CAMBIO ---
 
   try {
     const response = await fetch(`${BASE_API_URL}/auth/login`, {
