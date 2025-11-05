@@ -1052,3 +1052,169 @@ a.flexContainer {
   background-color: #fbebee; /* Tu color de "delete" hover */
   color: #dc3545;
 }
+
+/* ==================================================================== */
+/* --- ESTILOS PARA EL DASHBOARD DE ADMINISTRADOR (adminDashboard.js) --- */
+/* ==================================================================== */
+
+/* 1. El Contenedor del Grid Principal */
+.dashboard-grid {
+  display: grid;
+  /* 4 columnas en pantallas grandes */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 20px;
+  width: 100%;
+}
+
+/* 2. Tarjetas de KPIs (las 4 tarjetas superiores) */
+.kpi-card {
+  /* Reutilizamos tus estilos de tarjeta de .card-details */
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.kpi-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+}
+.kpi-card p {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #640093; /* Tu color de marca */
+}
+
+/* 3. Tarjetas de Gráficos (Pastel y Barras) */
+.chart-card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+
+  /* ¡CLAVE! Cada gráfico ocupará 2 columnas de ancho */
+  grid-column: span 2;
+
+  /* ¡CLAVE! Damos al contenedor del gráfico una altura fija */
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+.chart-wrapper {
+  position: relative;
+  flex-grow: 1; /* Ocupa el espacio restante en la tarjeta */
+
+  /* Asegura que el contenedor no se encoja incorrectamente */
+  min-height: 0;
+}
+/* (Opcional: puedes borrar la regla .chart-card canvas que tenías) */
+.chart-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  flex-shrink: 0; /* Evita que el título se encoja */
+}
+.chart-card canvas {
+  /* Asegura que el canvas no se desborde (aunque Chart.js lo maneja) */
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* 4. Tarjetas de Listas (Usuarios Activos y Bitácora) */
+.list-card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+
+  /* También ocupan 2 columnas */
+  grid-column: span 2;
+
+  /* Permite que la lista interna tenga scroll si es necesario */
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+.list-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+.list-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto; /* Scroll interno para las listas */
+  flex-grow: 1;
+}
+.list-card li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 5px;
+  border-bottom: 1px solid #f9f9f9;
+}
+.list-card li span {
+  font-size: 0.9rem;
+  color: #333;
+}
+.list-card li strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #640093;
+}
+.list-card li small {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* =========================================== */
+/* --- RESPONSIVIDAD DEL DASHBOARD --- */
+/* =========================================== */
+
+/* Para tablets (ej. 1024px) */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    /* Cambiamos a 2 columnas */
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Los gráficos y listas ahora ocupan el ancho completo (span 2) */
+}
+
+/* Para móviles (ej. 768px) */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    /* Cambiamos a 1 sola columna */
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  /* Forzamos a que todo ocupe 1 columna */
+  .kpi-card,
+  .chart-card,
+  .list-card {
+    grid-column: span 1;
+  }
+
+  /* Ajustamos la altura en móviles */
+  .chart-card {
+    height: 300px;
+  }
+  .list-card {
+    height: 350px;
+  }
+  .kpi-card p {
+    font-size: 2rem;
+  }
+}

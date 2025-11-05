@@ -324,7 +324,7 @@ export async function addMemberToProject(
     logAction({
       userId: actorId,
       projectId: projectId,
-      action: `PROJECT_MEMBER_ADDED: ${actorName} añadió a ${memberName} al proyecto ${projectName}`,
+      action: `PROJECT_MEMBER_ADDED: ${memberName} a "${projectName}"`,
     });
   }
   return result;
@@ -356,7 +356,7 @@ export async function updateMemberRoleInProject(
     logAction({
       userId: actorId,
       projectId: projectId,
-      action: `PROJECT_MEMBER_ROLE_UPDATED: ${actorName} cambió el rol de ${memberName} a ${role} en ${projectName}`,
+      action: `PROJECT_MEMBER_ROLE_UPDATED: Rol de "${memberName}" a ${role} en "${projectName}"`,
     });
   }
   return result;
@@ -400,7 +400,7 @@ export async function removeMemberFromProject(
     logAction({
       userId: actorId,
       projectId: projectId,
-      action: `PROJECT_MEMBER_REMOVED: ${actorName} eliminó a ${memberName} del proyecto ${projectName}`,
+      action: `PROJECT_MEMBER_REMOVED: "${memberName}" de "${projectName}"`,
     });
   }
   return result;

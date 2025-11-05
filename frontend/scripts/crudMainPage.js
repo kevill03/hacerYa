@@ -3,6 +3,7 @@ import { renderKanbanBoard } from "./taskManager.js";
 import { apiRequest } from "./api.js";
 import { renderMemberModal } from "./workspaceMembers.js";
 import { renderProjectMemberModal } from "./projectMembers.js";
+import { renderAdminDashboard } from "./adminDashboard.js";
 //------------------------------------------------------------
 // Declaraciones de los DOS MODALES y sus elementos
 const createModal = document.querySelector(".createWindow"); // Modal de Creación
@@ -269,18 +270,6 @@ const renderWorkspaces = async () => {
   }
 };
 
-const getStatsHTML = () => {
-  subtitleElement.textContent = "Estadísticas y Reportes";
-  document.title = "Estadísticas | HacerYA";
-  createActionButton.style.display = "none";
-  return `
-        <div class="admin-view">
-            <h2>Vista del Administrador 👮‍♂️</h2>
-            <p>Aquí se listarán todas las estadisticas extraídas a partir de los projectos.</p>
-        </div>
-    `;
-};
-
 // --- Modal de Detalles (AHORA GENERALIZADO) ---
 const openDetailsModal = (itemId, itemType) => {
   // Buscar el objeto completo: Buscar en el cache de proyectos o workspaces
@@ -426,10 +415,12 @@ const renderView = async (
       await renderWorkspaces(); // Espera a que termine
       break;
     case "admin-dashboard":
-      mainContentArea.innerHTML = getStatsHTML(); // Síncrono
-      // CORRECCIÓN: Oculta ambos botones en admin
       createActionButton.style.display = "none";
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
+      subtitleElement.textContent = "Estadísticas";
+      document.title = "Estadísticas | HacerYA";
+      // Llama al nuevo especialista para que construya el dashboard
+      await renderAdminDashboard(mainContentArea);
       break;
     case "viewWorkspaceProjects":
       await renderProjects(workspaceId, workspaceName); // Espera a que termine

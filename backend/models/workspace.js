@@ -169,7 +169,7 @@ export async function addMemberToWorkspace(
     logAction({
       userId: actorId,
       workspaceId: workspaceId,
-      action: `MEMBER_ADDED: Usuario ID ${userId} añadido al workspace ID ${workspaceId}`,
+      action: `MEMBER_ADDED: Usuario ID ${userId} a "${workspaceId}"`,
     });
   }
 
@@ -358,7 +358,7 @@ export async function updateMemberRole(
     logAction({
       userId: actorId,
       workspaceId: workspaceId,
-      action: `MEMBER_ROLE_UPDATED: ${memberName} ahora es ${role} en ${workspaceName}`,
+      action: `MEMBER_ROLE_UPDATED: Rol de "${memberName}" a ${role} en "${workspaceName}"`,
     });
   }
   return result;
@@ -403,7 +403,7 @@ export async function removeMemberFromWorkspace(
     logAction({
       userId: actorId,
       workspaceId: workspaceId,
-      action: `MEMBER_REMOVED: ${memberName} fue eliminado de ${workspaceName}`,
+      action: `MEMBER_REMOVED: "${memberName}" de "${workspaceName}"`,
     });
   }
   return result;
