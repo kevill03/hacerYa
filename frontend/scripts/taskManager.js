@@ -17,7 +17,12 @@ export async function renderKanbanBoard(container, projectId) {
     const tasks = tasksResponse.data;
     const members = membersResponse.data;
     // --- FIN DE LA CORRECCIÓN ---
-
+    const totalTasks = tasks.length;
+    const finishedTasks = tasks.filter((t) => t.status === "Hecho").length;
+    let progressPercentage = 0;
+    if (totalTasks > 0) {
+      progressPercentage = Math.round((finishedTasks / totalTasks) * 100);
+    }
     const kanbanHTML = `
       <div class="kanban-container">
         <div class="kanban-column" id="col-por-hacer" data-status="Por hacer">
@@ -65,6 +70,36 @@ export async function renderKanbanBoard(container, projectId) {
 // --- 2. FUNCIÓN PARA CREAR TARJETAS (SIN CAMBIOS) ---
 
 function createTaskCard(task) {
+  let dueDateHtml = "";
+  if (task.due_date) {
+    const today = new Date();
+    const dueDate = new Date(task.due_date);
+
+    // Normalizamos las fechas a medianoche para una comparación justa de "días"
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    const diffTime = dueDate.getTime() - today.getTime();
+    // Usamos Math.ceil para contar el día de hoy
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Formatear el mensaje y la clase CSS
+    if (diffDays < 0) {
+      const daysAgo = Math.abs(diffDays);
+      dueDateHtml = `<span class="task-due overdue">Venció hace ${daysAgo} ${
+        daysAgo === 1 ? "día" : "días"
+      }</span>`;
+    } else if (diffDays === 0) {
+      dueDateHtml = `<span class="task-due due-today">⚠️ Vence Hoy</span>`;
+    } else if (diffDays === 1) {
+      dueDateHtml = `<span class="task-due due-soon">Vence Mañana</span>`;
+    } else {
+      dueDateHtml = `<span class="task-due">Vence en ${diffDays} días</span>`;
+    }
+  }
+  // --- FIN DE LA LÓGICA DE FECHA ---
+
+  // Genera el HTML de la tarjeta
   return `
     <div class="task-card" draggable="true" data-task-id="${task.id}">
       <h4>${task.title}</h4>
@@ -74,7 +109,7 @@ function createTaskCard(task) {
           ? `<span class="task-assignee">${task.assigned_to_name}</span>`
           : ""
       }
-    </div>
+      ${dueDateHtml} </div>
   `;
 }
 
@@ -181,13 +216,26 @@ async function openTaskModal(taskId, projectId, status, members) {
 
   // Almacenar IDs para el submit
   form.dataset.projectId = projectId;
+  // --- INICIO DE LA LÓGICA DE PERMISOS (NUEVO) ---
+  const deleteBtn = document.getElementById("deleteTaskBtn");
 
+  // 1. Averiguar si el usuario actual es admin de este proyecto
+  const project = appState.allProjects.find((p) => p.id == projectId);
+  const isOwner = project && project.created_by === appState.currentUser.id;
+  const member = members.find((m) => m.id === appState.currentUser.id);
+  const isProjectAdmin = member && member.role_in_project === "admin";
+  const canManage = isOwner || isProjectAdmin;
   if (taskId) {
     // --- MODO EDICIÓN ---
     taskFormTitle.textContent = "Editar Tarea";
     submitTaskBtn.textContent = "Guardar Cambios";
     form.dataset.taskId = taskId; // Guardar el ID de la tarea
-
+    // 2. Mostrar el botón de eliminar SOLO si es admin Y está en modo edición
+    if (canManage) {
+      deleteBtn.style.display = "block";
+    } else {
+      deleteBtn.style.display = "none";
+    }
     try {
       // Cargar datos de la tarea
       const response = await apiRequest(
@@ -238,6 +286,7 @@ async function openTaskModal(taskId, projectId, status, members) {
     .querySelector(".overlay")
     .addEventListener("click", closeTaskModal, { once: true });
   form.addEventListener("submit", handleTaskFormSubmit, { once: true });
+  deleteBtn.addEventListener("click", handleDeleteTask, { once: true });
 }
 
 /**
@@ -303,4 +352,58 @@ async function handleTaskFormSubmit(e) {
       "error"
     );
   }
+}
+// (Pega esta nueva función en scripts/taskManager.js)
+
+/**
+ * Maneja el clic en el botón "Eliminar Tarea".
+ */
+async function handleDeleteTask(e) {
+  e.preventDefault(); // Prevenir cualquier acción de formulario
+
+  const projectId = taskForm.dataset.projectId;
+  const taskId = taskForm.dataset.taskId;
+
+  if (!taskId || !projectId) {
+    Swal.fire(
+      "Error",
+      "No se ha seleccionado ninguna tarea para eliminar.",
+      "error"
+    );
+    return;
+  }
+
+  // 1. Confirmar con SweetAlert
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: "¡No podrás revertir esto!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, ¡eliminar tarea!",
+    cancelButtonText: "Cancelar",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      // 2. Si se confirma, llamar a la API
+      try {
+        await apiRequest(`/projects/${projectId}/tasks/${taskId}`, "DELETE");
+
+        Swal.fire("¡Eliminada!", "La tarea ha sido eliminada.", "success");
+
+        closeTaskModal();
+
+        // 3. Refrescar el Kanban
+        const mainContainer = document.querySelector(".mainData");
+        await renderKanbanBoard(mainContainer, projectId);
+      } catch (error) {
+        console.error("Error al eliminar la tarea:", error);
+        Swal.fire(
+          "Error",
+          `No se pudo eliminar la tarea: ${error.message}`,
+          "error"
+        );
+      }
+    }
+  });
 }

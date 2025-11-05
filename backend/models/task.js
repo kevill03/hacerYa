@@ -1,6 +1,6 @@
 import { pool } from "../src/db.js";
 import { logAction } from "../src/utils/logAction.js";
-
+import { isProjectAdminOrCreator } from "./project.js";
 // --- HELPERS DE PERMISOS ---
 
 /**
@@ -263,23 +263,29 @@ export async function updateTask(taskId, data, actorId) {
  * Elimina una tarea.
  */
 export async function deleteTask(taskId, actorId) {
-  // 1. Verificar permisos y obtener datos para el log
-  const task = await getTaskById(taskId, actorId);
-  if (!task) {
-    throw new Error("Tarea no encontrada o acceso denegado.");
+  // 1. Obtener la tarea para saber a qué proyecto pertenece
+  const taskQuery = `SELECT project_id, title FROM tasks WHERE id = $1`.trim();
+  const taskResult = await pool.query(taskQuery, [taskId]);
+  if (taskResult.rowCount === 0) {
+    throw new Error("Tarea no encontrada.");
   }
-
-  // 2. Eliminar la tarea
+  const task = taskResult.rows[0];
+  const hasPermission = await isProjectAdminOrCreator(task.project_id, actorId);
+  if (!hasPermission) {
+    throw new Error(
+      "Permiso denegado. Solo un admin del proyecto puede eliminar tareas."
+    );
+  }
+  // 3. Si tiene permiso, eliminar la tarea
   const deleteQuery = `DELETE FROM tasks WHERE id = $1 RETURNING *`.trim();
   const { rows } = await pool.query(deleteQuery, [taskId]);
 
-  // Bitácora
+  // 4. Bitácora
   if (rows.length > 0) {
-    // No necesitamos actorName
+    // (No necesitamos actorName, logAction lo obtiene de 'userId')
     logAction({
       userId: actorId,
       projectId: task.project_id,
-      // CORREGIDO: String simplificado
       action: `TASK_DELETED: "${task.title}"`,
     });
   }

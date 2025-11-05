@@ -1,8 +1,8 @@
 import { Router } from "express";
-import * as TaskModel from "../../models/task.js"; // Ajusta la ruta a tu modelo
+import * as TaskModel from "../../models/task.js";
 import { verifyToken } from "../middleware/auth.js";
-
-// ¡CLAVE! mergeParams: true permite a este router acceder al :id de /projects/:id
+import * as ProjectModel from "../../models/project.js";
+// mergeParams: true permite a este router acceder al :id de /projects/:id
 const router = Router({ mergeParams: true });
 
 // Proteger todas las rutas de tareas
@@ -134,8 +134,29 @@ router.put("/:taskId", async (req, res) => {
   const { taskId } = req.params;
   const dataToUpdate = req.body;
   const actorId = req.userId;
-
+  const { id: projectId } = req.params;
   try {
+    // 1. Verificamos si el usuario está intentando cambiar la fecha de entrega
+    if (dataToUpdate.due_date !== undefined) {
+      // 2. Si es así, verificamos si tiene rol de 'admin' en el proyecto
+      // (Usamos la función que ya existe en models/project.js)
+      const hasPermission = await ProjectModel.isProjectAdminOrCreator(
+        projectId,
+        actorId
+      );
+
+      if (!hasPermission) {
+        return res.status(403).json({
+          message:
+            "Permiso denegado. Solo un administrador del proyecto puede cambiar la fecha de entrega.",
+        });
+      }
+    }
+    // --- FIN DE LA LÓGICA DE PERMISOS ---
+
+    // 3. Si pasó el chequeo (o no estaba cambiando la fecha),
+    //    llamamos a la función normal del modelo.
+    //    (TaskModel.updateTask ya verifica que el usuario sea al menos 'miembro')
     const updatedTask = await TaskModel.updateTask(
       taskId,
       dataToUpdate,

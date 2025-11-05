@@ -857,10 +857,18 @@ a.flexContainer {
 }
 
 /* 7. Estilo del botón de submit */
-#submitTaskBtn {
+#submitTaskBtn,
+#deleteTaskBtn {
+  margin: 0;
   margin-top: 1rem; /* Espacio extra antes del botón */
 }
-
+#submitTaskBtn,
+#submitCreateBtn {
+  background-color: #026cf7;
+}
+#deleteTaskBtn {
+  background-color: #dc3545;
+}
 #taskFormTitle {
   color: white;
 }
@@ -1006,4 +1014,39 @@ a.flexContainer {
   opacity: 0.5;
   transform: rotate(3deg) scale(1.03);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+/* ==================================================================== */
+/* --- ESTILOS PARA LA FECHA LÍMITE DE TAREAS (taskManager.js) --- */
+/* ==================================================================== */
+
+/* Estilo base para el texto de la fecha */
+.task-due {
+  font-size: 0.8rem; /* Pequeño */
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  align-self: flex-start; /* Se alinea a la izquierda */
+  margin-top: 5px; /* Espacio de la "píldora" de asignado */
+
+  /* Color por defecto (Gris) */
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+/* ⚠️ Vence Hoy (Naranja) */
+.task-due.due-today {
+  background-color: #fff4e5;
+  color: #ff9800;
+}
+
+/* ⏳ Vence Mañana (Amarillo/Azul claro) */
+.task-due.due-soon {
+  background-color: #e8f0fe; /* Tu color de sidebar hover */
+  color: #1a73e8;
+}
+
+/* 🛑 Vencida (Rojo) */
+.task-due.overdue {
+  background-color: #fbebee; /* Tu color de "delete" hover */
+  color: #dc3545;
 }
