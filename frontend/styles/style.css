@@ -1018,6 +1018,26 @@ a.flexContainer {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 /* ==================================================================== */
+/* --- ESTILOS DE INDICADORES DE TAREA (Prioridad y Fecha) --- */
+/* ==================================================================== */
+
+/* --- 1. ESTILOS DE PRIORIDAD (Color de Texto) --- */
+/* (El color por defecto del h4 es tu morado de marca, lo usamos para 'Media') */
+
+/* Prioridad Alta (Rojo) */
+.task-card p.priority-alta-text {
+  color: #dc3545;
+}
+.task-card p.priority-media-text {
+  color: #ff9800;
+}
+
+/* Prioridad Baja (Gris) */
+.task-card p.priority-baja-text {
+  color: #555;
+}
+
+/* ==================================================================== */
 /* --- ESTILOS PARA LA FECHA LÍMITE DE TAREAS (taskManager.js) --- */
 /* ==================================================================== */
 
@@ -1052,7 +1072,18 @@ a.flexContainer {
   background-color: #fbebee; /* Tu color de "delete" hover */
   color: #dc3545;
 }
-
+.task-card.due-overdue {
+  /* Vencida (Rojo) */
+  border-left: 5px solid #dc3545;
+}
+.task-card.due-today {
+  /* Vence Hoy (Naranja/Amarillo) */
+  border-left: 5px solid #ffc107;
+}
+.task-card.due-soon {
+  /* Vence Mañana (Azul) */
+  border-left: 5px solid #1a73e8;
+}
 /* ==================================================================== */
 /* --- ESTILOS PARA EL DASHBOARD DE ADMINISTRADOR (adminDashboard.js) --- */
 /* ==================================================================== */

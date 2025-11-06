@@ -71,10 +71,10 @@ export async function renderKanbanBoard(container, projectId) {
 
 function createTaskCard(task) {
   let dueDateHtml = "";
+  let dueDateClass = "";
   if (task.due_date) {
     const today = new Date();
     const dueDate = new Date(task.due_date);
-
     // Normalizamos las fechas a medianoche para una comparación justa de "días"
     today.setHours(0, 0, 0, 0);
     dueDate.setHours(0, 0, 0, 0);
@@ -86,24 +86,35 @@ function createTaskCard(task) {
     // Formatear el mensaje y la clase CSS
     if (diffDays < 0) {
       const daysAgo = Math.abs(diffDays);
+      dueDateClass = "due-overdue"; // Clase para el borde rojo
       dueDateHtml = `<span class="task-due overdue">Venció hace ${daysAgo} ${
         daysAgo === 1 ? "día" : "días"
       }</span>`;
     } else if (diffDays === 0) {
+      dueDateClass = "due-today"; // Clase para el borde naranja
       dueDateHtml = `<span class="task-due due-today">⚠️ Vence Hoy</span>`;
     } else if (diffDays === 1) {
+      dueDateClass = "due-soon"; // Clase para el borde azul
       dueDateHtml = `<span class="task-due due-soon">Vence Mañana</span>`;
     } else {
       dueDateHtml = `<span class="task-due">Vence en ${diffDays} días</span>`;
     }
   }
-  // --- FIN DE LA LÓGICA DE FECHA ---
-
+  let priorityClass = "";
+  if (task.priority === "Alta") {
+    priorityClass = "priority-alta-text";
+  } else if (task.priority === "Baja" || !task.priority) {
+    priorityClass = "priority-baja-text";
+  } else {
+    priorityClass = "priority-media-text";
+  }
   // Genera el HTML de la tarjeta
   return `
-    <div class="task-card" draggable="true" data-task-id="${task.id}">
+    <div class="task-card ${dueDateClass}" draggable="true" data-task-id="${
+    task.id
+  }">
       <h4>${task.title}</h4>
-      <p>Prioridad: ${task.priority}</p>
+      <p class=${priorityClass}>Prioridad: ${task.priority}</p>
       ${
         task.assigned_to_name
           ? `<span class="task-assignee">${task.assigned_to_name}</span>`
@@ -353,7 +364,6 @@ async function handleTaskFormSubmit(e) {
     );
   }
 }
-// (Pega esta nueva función en scripts/taskManager.js)
 
 /**
  * Maneja el clic en el botón "Eliminar Tarea".
