@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as TaskModel from "../../models/task.js";
 import { verifyToken } from "../middleware/auth.js";
 import * as ProjectModel from "../../models/project.js";
+import commentsRouter from "./comments.js";
 // mergeParams: true permite a este router acceder al :id de /projects/:id
 const router = Router({ mergeParams: true });
 
@@ -190,5 +191,5 @@ router.delete("/:taskId", async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor." });
   }
 });
-
+router.use("/:taskId/comments", commentsRouter);
 export default router;

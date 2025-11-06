@@ -1,7 +1,8 @@
 import { apiRequest } from "./api.js";
 import { appState } from "./crudMainPage.js"; // Necesitamos el appState para el refresh
 
-// --- 1. FUNCIÓN PRINCIPAL DE RENDERIZADO (CORREGIDA) ---
+let currentTaskSubmitHandler = null;
+let currentCommentSubmitHandler = null;
 
 export async function renderKanbanBoard(container, projectId) {
   try {
@@ -17,12 +18,6 @@ export async function renderKanbanBoard(container, projectId) {
     const tasks = tasksResponse.data;
     const members = membersResponse.data;
     // --- FIN DE LA CORRECCIÓN ---
-    const totalTasks = tasks.length;
-    const finishedTasks = tasks.filter((t) => t.status === "Hecho").length;
-    let progressPercentage = 0;
-    if (totalTasks > 0) {
-      progressPercentage = Math.round((finishedTasks / totalTasks) * 100);
-    }
     const kanbanHTML = `
       <div class="kanban-container">
         <div class="kanban-column" id="col-por-hacer" data-status="Por hacer">
@@ -139,8 +134,6 @@ function createTaskCard(task) {
     }
     // Si no tiene due_date y no está completada, no se muestra nada.
   }
-
-  // --- FIN DE LA LÓGICA DE FECHAS ---
 
   // --- Lógica de Prioridad (sin cambios) ---
   if (task.priority === "Alta") priorityClass = "priority-alta-text";
@@ -259,8 +252,6 @@ async function handleTaskDrop(taskId, newStatus, projectId, container) {
     await apiRequest(`/projects/${projectId}/tasks/${taskId}/status`, "PATCH", {
       status: newStatus,
     });
-
-    // 2. ¡LA SOLUCIÓN CLAVE!
     // Refrescamos el tablero completo. Esto:
     // - Muestra la tarjeta en la nueva columna.
     // - Vuelve a ejecutar createTaskCard(), aplicando 'draggable="false"'
@@ -273,33 +264,32 @@ async function handleTaskDrop(taskId, newStatus, projectId, container) {
     await renderKanbanBoard(container, projectId);
   }
 }
-// --- 4. LÓGICA DEL MODAL DE TAREAS (¡NUEVO!) ---
-// (Asume que el HTML del modal está en mainPage.html con id="taskModal")
+//LÓGICA DEL MODAL DE TAREAS(Asume que el HTML del modal está en mainPage.html con id="taskModal")
 
 const taskModal = document.getElementById("taskModal");
 const taskForm = document.getElementById("taskForm");
 const taskFormTitle = document.getElementById("taskFormTitle");
 const submitTaskBtn = document.getElementById("submitTaskBtn");
 const taskAssigneeSelect = document.getElementById("taskAssigneeSelect");
-
+const commentsSection = document.querySelector(".task-comments-section");
+const commentsListEl = document.getElementById("taskCommentsList");
+const commentForm = document.getElementById("commentForm");
+const commentInput = document.getElementById("commentInput");
 /**
  * Abre el modal de Tareas, sea para Crear o Editar.
  */
-// EN: scripts/taskManager.js
-
 async function openTaskModal(taskId, projectId, status, members) {
   const form = taskForm;
   form.reset();
+  commentForm.reset();
 
-  // --- 1. Definir los elementos del formulario ---
-  // (Los guardamos en variables para fácil acceso)
+  // 1. Definir los elementos del formulario
   const taskTitleInput = document.getElementById("taskTitle");
   const taskDescInput = document.getElementById("taskDescription");
   const taskStatusSelect = document.getElementById("taskStatusSelect");
   const taskPrioritySelect = document.getElementById("taskPrioritySelect");
   const taskDueDateInput = document.getElementById("taskDueDate");
   const deleteBtn = document.getElementById("deleteTaskBtn");
-  // Agrupar todos los campos editables
   const formFields = [
     taskTitleInput,
     taskDescInput,
@@ -309,7 +299,7 @@ async function openTaskModal(taskId, projectId, status, members) {
     taskDueDateInput,
   ];
 
-  // --- 2. Poblar el <select> de miembros (sin cambios) ---
+  // 2. Poblar el <select> de miembros
   taskAssigneeSelect.innerHTML = '<option value="">(Sin asignar)</option>';
   if (members && Array.isArray(members)) {
     members.forEach((member) => {
@@ -319,29 +309,29 @@ async function openTaskModal(taskId, projectId, status, members) {
     });
   }
 
-  // Almacenar IDs para el submit
   form.dataset.projectId = projectId;
 
-  // --- 3. Lógica de Permisos (sin cambios) ---
+  // 3. Lógica de Permisos
   const project = appState.allProjects.find((p) => p.id == projectId);
   const isOwner = project && project.created_by === appState.currentUser.id;
   const member = members.find((m) => m.id === appState.currentUser.id);
   const isProjectAdmin = member && member.role_in_project === "admin";
-  const canManage = isOwner || isProjectAdmin; // El usuario es Admin o Creador
+  const canManage = isOwner || isProjectAdmin;
 
   if (taskId) {
     // --- MODO EDICIÓN ---
     taskFormTitle.textContent = "Editar Tarea";
     submitTaskBtn.textContent = "Guardar Cambios";
     form.dataset.taskId = taskId;
+    commentsSection.style.display = "none";
 
     try {
-      // Cargar datos de la tarea
-      const response = await apiRequest(
-        `/projects/${projectId}/tasks/${taskId}`,
-        "GET"
-      );
-      const task = response.data;
+      const [taskResponse, commentsResponse] = await Promise.all([
+        apiRequest(`/projects/${projectId}/tasks/${taskId}`, "GET"),
+        apiRequest(`/projects/${projectId}/tasks/${taskId}/comments`, "GET"),
+      ]);
+      const task = taskResponse.data;
+      const comments = commentsResponse.data;
 
       // Rellenar el formulario
       taskTitleInput.value = task.title;
@@ -351,27 +341,34 @@ async function openTaskModal(taskId, projectId, status, members) {
       taskAssigneeSelect.value = task.assigned_to || "";
       taskDueDateInput.value = task.due_date ? task.due_date.split("T")[0] : "";
 
-      // --- 4. ¡NUEVA LÓGICA DE READ-ONLY! ---
-      const isCompleted = task.status === "Hecho";
+      populateComments(comments);
+      commentsSection.style.display = "block";
 
+      // --- ¡CORRECCIÓN DE LISTENER (A)! ---
+      // Creamos la función y la guardamos en la variable global
+      currentCommentSubmitHandler = (e) =>
+        handleCommentSubmit(e, projectId, taskId);
+      // La añadimos SIN { once: true }
+      commentForm.addEventListener("submit", currentCommentSubmitHandler);
+
+      // Lógica de Read-Only
+      const isCompleted = task.status === "Hecho";
       if (isCompleted && !canManage) {
-        // Tarea "Hecha" Y NO eres admin: Bloquear todo
         taskFormTitle.textContent = "Ver Tarea (Completada)";
         formFields.forEach((field) => (field.disabled = true));
         submitTaskBtn.style.display = "none";
         deleteBtn.style.display = "none";
+        commentForm.style.display = "none";
       } else {
-        // Tarea NO "Hecha" O SÍ eres admin: Habilitar todo
         formFields.forEach((field) => (field.disabled = false));
         submitTaskBtn.style.display = "block";
-        // Mostrar botón de eliminar solo si puede gestionar
         deleteBtn.style.display = canManage ? "block" : "none";
+        commentForm.style.display = "flex";
       }
-      // --- FIN DE LA LÓGICA READ-ONLY ---
     } catch (error) {
       Swal.fire(
         "Error",
-        `No se pudieron cargar los datos de la tarea: ${error.message}`,
+        `No se pudieron cargar los datos: ${error.message}`,
         "error"
       );
       return;
@@ -380,14 +377,11 @@ async function openTaskModal(taskId, projectId, status, members) {
     // --- MODO CREACIÓN ---
     taskFormTitle.textContent = "Crear Nueva Tarea";
     submitTaskBtn.textContent = "Crear Tarea";
-    form.dataset.taskId = ""; // Limpiar el ID
-
-    // Resetear: Habilitar todos los campos y mostrar botón de guardar
+    form.dataset.taskId = "";
     formFields.forEach((field) => (field.disabled = false));
     submitTaskBtn.style.display = "block";
-    deleteBtn.style.display = "none"; // Ocultar siempre al crear
-
-    // Asignar el estado de la columna donde se hizo clic
+    deleteBtn.style.display = "none";
+    commentsSection.style.display = "none";
     if (status) {
       taskStatusSelect.value = status;
     }
@@ -396,15 +390,14 @@ async function openTaskModal(taskId, projectId, status, members) {
   // Mostrar el modal
   taskModal.classList.remove("hidden");
   document.querySelector(".overlay").classList.remove("hidden");
-
-  // Añadir listeners (solo una vez)
   taskModal
     .querySelector(".closeWindow")
-    .addEventListener("click", closeTaskModal, { once: true });
-  document
-    .querySelector(".overlay")
-    .addEventListener("click", closeTaskModal, { once: true });
-  form.addEventListener("submit", handleTaskFormSubmit, { once: true });
+    .addEventListener("click", closeTaskModal);
+  document.querySelector(".overlay").addEventListener("click", closeTaskModal);
+
+  // Creamos y guardamos el listener de detalles de tarea
+  currentTaskSubmitHandler = (e) => handleTaskFormSubmit(e);
+  form.addEventListener("submit", currentTaskSubmitHandler);
   deleteBtn.addEventListener("click", handleDeleteTask, { once: true });
 }
 
@@ -414,8 +407,27 @@ async function openTaskModal(taskId, projectId, status, members) {
 function closeTaskModal() {
   taskModal.classList.add("hidden");
   document.querySelector(".overlay").classList.add("hidden");
-  // Limpiamos el listener del formulario para evitar envíos duplicados
-  taskForm.removeEventListener("submit", handleTaskFormSubmit);
+
+  // --- ¡CORRECCIÓN DE LIMPIEZA! ---
+  // 1. Limpiamos los listeners de cierre
+  taskModal
+    .querySelector(".closeWindow")
+    .removeEventListener("click", closeTaskModal);
+  document
+    .querySelector(".overlay")
+    .removeEventListener("click", closeTaskModal);
+
+  // 2. Limpiamos el listener del formulario de TAREAS (si existe)
+  if (currentTaskSubmitHandler) {
+    taskForm.removeEventListener("submit", currentTaskSubmitHandler);
+    currentTaskSubmitHandler = null; // Limpiamos la variable
+  }
+
+  // 3. Limpiamos el listener del formulario de COMENTARIOS (si existe)
+  if (currentCommentSubmitHandler) {
+    commentForm.removeEventListener("submit", currentCommentSubmitHandler);
+    currentCommentSubmitHandler = null; // Limpiamos la variable
+  }
 }
 
 /**
@@ -524,4 +536,89 @@ async function handleDeleteTask(e) {
       }
     }
   });
+}
+/**
+ * Renderiza la lista de comentarios en el HTML.
+ */
+function populateComments(comments) {
+  if (!comments || comments.length === 0) {
+    commentsListEl.innerHTML =
+      "<p class='no-comments-msg'>No hay comentarios aún.</p>";
+    return;
+  }
+
+  commentsListEl.innerHTML = comments
+    .map(
+      (comment) => `
+    <div class="comment-item">
+      <strong class="comment-author">${comment.author_name}</strong>
+      <p class="comment-content">${comment.content}</p>
+      <small class="comment-date">${new Date(
+        comment.created_at
+      ).toLocaleString()}</small>
+    </div>
+  `
+    )
+    .join("");
+
+  // Hacer scroll al último comentario
+  commentsListEl.scrollTop = commentsListEl.scrollHeight;
+}
+
+/**
+ * Maneja el envío del formulario de nuevo comentario.
+ */
+async function handleCommentSubmit(e, projectId, taskId) {
+  e.preventDefault();
+  const content = commentInput.value.trim();
+  if (!content) return;
+
+  // Deshabilitar el formulario para evitar envíos duplicados
+  commentInput.disabled = true;
+  commentForm.querySelector('button[type="submit"]').disabled = true;
+
+  try {
+    // 1. Enviar el nuevo comentario a la API
+    const response = await apiRequest(
+      `/projects/${projectId}/tasks/${taskId}/comments`,
+      "POST",
+      { content }
+    );
+    const newComment = response.data; // La API devuelve el comentario con el nombre
+
+    // 2. Añadir el nuevo comentario al DOM (sin recargar todo)
+    const commentHTML = `
+      <div class="comment-item">
+        <strong class="comment-author">${newComment.author_name}</strong>
+        <p class="comment-content">${newComment.content}</p>
+        <small class="comment-date">${new Date(
+          newComment.created_at
+        ).toLocaleString()}</small>
+      </div>
+    `;
+
+    // Limpiar el "No hay comentarios" si es el primero
+    const noCommentsMsg = commentsListEl.querySelector(".no-comments-msg");
+    if (noCommentsMsg) {
+      commentsListEl.innerHTML = "";
+    }
+
+    commentsListEl.innerHTML += commentHTML;
+    commentInput.value = ""; // Limpiar el input
+
+    // Hacer scroll al nuevo comentario
+    commentsListEl.scrollTop = commentsListEl.scrollHeight;
+  } catch (error) {
+    console.error("Error al publicar comentario:", error);
+    Swal.fire(
+      "Error",
+      `No se pudo publicar el comentario: ${error.message}`,
+      "error"
+    );
+  } finally {
+    // Volver a habilitar el formulario
+    commentInput.disabled = false;
+    commentForm.querySelector('button[type="submit"]').disabled = false;
+    commentInput.focus();
+  }
 }

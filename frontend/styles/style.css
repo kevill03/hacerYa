@@ -427,6 +427,8 @@ a.flexContainer {
   border-radius: 5px;
   box-shadow: 0 3rem 5rem rgba(0, 0, 0, 0.3);
   z-index: 10;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .overlay {
@@ -473,7 +475,7 @@ a.flexContainer {
   color: white;
 }
 
-/* --- ESTILOS PARA LAS TARJETAS LISTADAS (.card-details) --- */
+/* ESTILOS PARA LAS TARJETAS LISTADAS (.card-details) */
 
 /* Contenedor principal de las listas (Grid vs Flex) */
 .mainData {
@@ -529,7 +531,6 @@ a.flexContainer {
 }
 
 /* Estilo para la Vista de Grid */
-/* Usamos la clase .gridContainer en .mainData para activar este layout */
 .mainData.gridContainer {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   display: grid;
@@ -537,25 +538,18 @@ a.flexContainer {
 
 .mainData.gridContainer .card-details {
   width: 100%; /* Las tarjetas llenan el ancho de su columna en el grid */
-  margin: 0; /* Quitamos el margen lateral, lo dejamos en el gap del grid */
+  margin: 0;
 }
 
-/* --- 1. AJUSTE ESPECÍFICO DE LA VENTANA DE DETALLES --- */
+/*AJUSTE ESPECÍFICO DE LA VENTANA DE DETALLES*/
 .detailsWindow {
-  /* Fondo más neutro y profesional para el contenido de lectura */
   background: none;
   background-color: #ffffff;
-
-  /* Reducir el padding para una ventana de detalles */
-  padding: 2rem 3rem; /* 32px arriba/abajo, 48px a los lados */
-
-  /* Mantener las propiedades de centrado y sombra */
-  /* width: 50%; /* Puedes mantener este o usar max-width */
-  max-width: 650px; /* Limita el ancho en pantallas muy grandes */
-  border-radius: 10px; /* Esquinas ligeramente más suaves */
+  padding: 2rem 3rem;
+  max-width: 650px;
+  border-radius: 10px;
 }
 
-/* Opcional: Sobrescribir el título en el modal de detalles para que sea más legible */
 .detailsWindow h1 {
   color: #333; /* Color oscuro y neutro */
   font-size: 2rem;
@@ -564,15 +558,13 @@ a.flexContainer {
   padding-bottom: 10px;
 }
 
-/* --- 2. ESTILOS DEL CONTENIDO DE DETALLES (#detailsContent) --- */
+/* ESTILOS DEL CONTENIDO DE DETALLES (#detailsContent)*/
 #detailsContent {
-  /* Estilo del contenedor para la información y los botones */
   flex-direction: column;
   align-items: flex-start;
   gap: 15px; /* Espacio entre secciones de detalles */
 }
 
-/* Estilo para los pares de información (ej. Descripción, Creador) */
 #detailsContent p {
   font-size: 1rem;
   color: #444;
@@ -585,7 +577,7 @@ a.flexContainer {
   font-weight: 600;
 }
 
-/* --- 3. ESTILOS DE BOTONES DE ACCIÓN (Editar, Eliminar, Añadir Miembro) --- */
+/* ESTILOS DE BOTONES DE ACCIÓN (Editar, Eliminar, Añadir Miembro)*/
 .detailActions {
   /* Contenedor de botones */
   width: 100%;
@@ -602,29 +594,25 @@ a.flexContainer {
   border-radius: 8px;
 }
 
-/* Botón Editar (Neutro/Primario) */
 .detailActions .btnEdit {
-  background-color: #1a73e8; /* Azul primario */
+  background-color: #1a73e8;
   color: white;
 }
 
-/* Botón Eliminar (Peligro) */
 .detailActions .btnDelete {
-  background-color: #dc3545; /* Rojo de peligro */
+  background-color: #dc3545;
   color: white;
 }
 
-/* Botón Añadir Miembro (Secundario/Información) */
 .detailActions .btnAddMember,
 .btnAddProjectMember {
-  background-color: #ffc107; /* Amarillo/Naranja */
+  background-color: #ffc107;
   color: #333;
 }
-/* ==================================================================== */
-/* --- ESTILOS PARA AMBOS MODALES DE GESTIÓN DE MIEMBROS --- */
-/* ==================================================================== */
 
-/* 1. Ajustes al formulario de "Añadir Miembro" (para AMBOS modales) */
+/* --- ESTILOS PARA AMBOS MODALES DE GESTIÓN DE MIEMBROS --- */
+
+/*Ajustes al formulario de "Añadir Miembro" (para AMBOS modales)*/
 #addMemberForm,
 #addProjectMemberForm {
   margin-bottom: 0.5rem;
@@ -638,7 +626,6 @@ a.flexContainer {
   gap: 0.5rem;
 }
 
-/* Hacer que el input de email ocupe el espacio disponible */
 #memberEmailInput,
 #projectMemberEmailInput {
   flex-grow: 1;
@@ -687,8 +674,7 @@ a.flexContainer {
   transform: scale(1.03);
 }
 
-/* 2. Estilos para la Lista de Miembros Actuales (REUTILIZADOS) */
-/* (El resto de tu CSS usa clases, así que no necesita cambios) */
+/* 2. Estilos para la Lista de Miembros Actuales*/
 .members-list-container {
   width: 100%;
   margin-top: 0.5rem;
@@ -713,13 +699,12 @@ a.flexContainer {
   list-style: none;
   padding: 0;
   margin: 0;
-  overflow-y: auto; /* El scroll de la lista */
+  overflow-y: auto;
   border: 1px solid #eee;
   border-radius: 8px;
-  /* (Modificado para el layout del scroll) */
   flex-grow: 1;
   min-height: 0;
-  max-height: 150px; /* Límite de altura para la lista */
+  max-height: 150px;
 }
 
 /* Estilo para cada fila de miembro */
@@ -797,34 +782,28 @@ a.flexContainer {
   color: #dc3545;
 }
 
-/* ==================================================================== */
-/* --- ESTILOS PARA EL MODAL DE TAREAS (taskManager.js) --- */
-/* ==================================================================== */
+/* ESTILOS PARA EL MODAL DE TAREAS (taskManager.js)*/
 
-/* 1. Ajustes generales al formulario de tareas */
+/*Ajustes generales al formulario de tareas */
 #taskForm {
-  gap: 0.5rem; /* Más espacio entre los campos */
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
-
-/* 2. Estilos para las etiquetas (Labels) */
 #taskForm label {
   font-size: 1rem;
   font-weight: 600;
-  color: white; /* Coincide con tu #formTitle */
-  margin-bottom: 3px; /* Pequeño espacio sobre el input */
+  color: white;
+  margin-bottom: 3px;
 }
 
-/* 3. Anulación del .inputGroup (para apilar label/input) */
-/* (Tu .inputGroup por defecto usa space-between, lo cual no queremos aquí) */
+/* Anulación del .inputGroup (para apilar label/input) */
 #taskForm .inputGroup {
-  flex-direction: column; /* Apila la etiqueta encima del input */
-  align-items: flex-start; /* Alinea la etiqueta a la izquierda */
+  flex-direction: column;
+  align-items: flex-start;
   width: 100%;
-  gap: 5px; /* Espacio entre etiqueta e input */
+  gap: 5px;
 }
 
-/* 4. Estilos para los nuevos <select> y <input type="date"> */
-/* (Haciendo que coincidan con tus .createActionForm input) */
 #taskForm select,
 #taskForm input[type="date"] {
   width: 100%;
@@ -832,15 +811,12 @@ a.flexContainer {
   border: #ffffff solid 2px;
   border-radius: 5px;
   padding: 5px;
-
-  /* Añadimos una altura y fuente consistentes */
   height: 45px;
   font-size: 1rem;
   font-family: "Poppins", sans-serif;
-  color: #333; /* Color de texto legible */
+  color: #333;
 }
 
-/* 5. Estilo de :focus (copiado de tu .createActionForm:focus) */
 #taskForm select:focus,
 #taskForm input[type="date"]:focus {
   outline: none;
@@ -848,7 +824,6 @@ a.flexContainer {
   box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.664);
 }
 
-/* 6. Estilos para la fila de 2 columnas (.input-row) */
 .input-row {
   display: flex;
   flex-direction: row;
@@ -856,11 +831,10 @@ a.flexContainer {
   width: 100%;
 }
 
-/* 7. Estilo del botón de submit */
 #submitTaskBtn,
 #deleteTaskBtn {
   margin: 0;
-  margin-top: 1rem; /* Espacio extra antes del botón */
+  margin-top: 1rem;
 }
 #submitTaskBtn,
 #submitCreateBtn {
@@ -870,6 +844,7 @@ a.flexContainer {
   background-color: #dc3545;
   display: none;
   width: 100%;
+  flex-shrink: 0;
 }
 #taskFormTitle {
   color: white;
@@ -878,42 +853,34 @@ a.flexContainer {
   padding: 2rem;
 }
 
-/* ==================================================================== */
-/* --- ESTILOS PARA EL KANBAN BOARD (taskManager.js) --- */
-/* ==================================================================== */
+/*ESTILOS PARA EL KANBAN BOARD (taskManager.js)*/
 
-/* 1. Contenedor Principal del Kanban
-   (Ocupa todo el espacio de .mainData y permite scroll horizontal) */
+/*Contenedor Principal del Kanban(Ocupa todo el espacio de .mainData y permite scroll horizontal)*/
 .kanban-container {
   display: flex;
-  flex-direction: row; /* Apila las columnas horizontalmente */
+  flex-direction: row;
   width: 100%;
-  height: 100%; /* Ocupa toda la altura de .mainData */
-  overflow-x: auto; /* Permite scroll HORIZONTAL si las columnas no caben */
-  overflow-y: hidden; /* Evita el scroll vertical del contenedor */
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 10px;
-  gap: 20px; /* Espacio entre columnas */
-  min-width: 0; /* Forza al contenedor a obedecer su 'width: 100%' */
+  gap: 20px;
+  min-width: 0;
 }
 
-/* 2. Columnas Individuales (Por Hacer, En Progreso, etc.) */
+/*Columnas Individuales (Por Hacer, En Progreso, etc.) */
 .kanban-column {
   display: flex;
-  flex-direction: column; /* Apila Título, Lista y Botón */
-
-  /* Sizing: Cada columna tiene un ancho fijo y no se encoge */
+  flex-direction: column;
   flex-shrink: 0;
-  width: 300px; /* Ancho fijo para cada columna */
-  height: 100%; /* Ocupa toda la altura disponible */
-
-  /* Apariencia: Reutiliza el color de fondo de tu body */
+  width: 300px;
+  height: 100%;
   background-color: white;
   border-radius: 12px;
   padding: 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Título de la Columna (H3) */
 .kanban-column h3 {
   font-family: "Poppins", sans-serif;
   font-weight: 600;
@@ -926,28 +893,22 @@ a.flexContainer {
   border-bottom: 2px solid #e0e0e0;
 }
 
-/* 3. Lista de Tareas (El área de scroll) */
+/*Lista de Tareas*/
 .kanban-tasks-list {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* Espacio entre tarjetas */
-
-  /* ¡CLAVE! Esto hace que la lista ocupe el espacio sobrante */
+  gap: 12px;
   flex-grow: 1;
-  overflow-y: auto; /* ¡SOLO esta lista tendrá scroll vertical! */
-
-  /* Truco de Flexbox para que el scroll funcione correctamente */
+  overflow-y: auto;
+  /*Linea escencial anadida el 06/11/2025 para que el scroll funcione correctamente */
   min-height: 0;
-
-  /* Relleno para que las tarjetas no toquen los bordes */
   padding: 5px;
 }
 
-/* 4. Tarjetas de Tarea (Reutiliza tu estilo .project-card) */
+/*Tarjetas de Tarea*/
 .task-card {
-  /* Apariencia */
   background-color: white;
-  border-radius: 8px; /* Un poco más pequeño que las tarjetas de proyecto */
+  border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 15px;
   cursor: grab; /* Indica que se puede arrastrar */
@@ -968,7 +929,7 @@ a.flexContainer {
 .task-card h4 {
   font-size: 1rem;
   font-weight: 600;
-  color: #640093; /* Tu color de marca principal */
+  color: #640093;
 }
 
 .task-card p {
@@ -976,19 +937,17 @@ a.flexContainer {
   color: #555;
   margin: 0;
 }
-
-/* "Píldora" para el usuario asignado (reusa tus colores de sidebar) */
 .task-assignee {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #1a73e8; /* Tu color de sidebar activo */
-  background-color: #e8f0fe; /* Tu color de sidebar hover */
+  color: #1a73e8;
+  background-color: #e8f0fe;
   padding: 3px 8px;
   border-radius: 12px;
-  align-self: flex-start; /* Se alinea a la izquierda */
+  align-self: flex-start;
 }
 
-/* 5. Botón de "Añadir Tarea" */
+/*Botón de "Añadir Tarea" */
 .add-task-btn {
   background-color: transparent;
   border: none;
@@ -1001,111 +960,99 @@ a.flexContainer {
   color: #640093;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
-
-  /* Evita que el botón se encoja */
   flex-shrink: 0;
 }
 
 .add-task-btn:hover {
-  background-color: #c0d4f7; /* Tu color de sidebar hover */
+  background-color: #c0d4f7;
   color: #026cf7;
 }
 
-/* 6. Efecto visual al arrastrar */
+/*Efecto visual al arrastrar */
 .task-card.dragging {
   opacity: 0.5;
   transform: rotate(3deg) scale(1.03);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
-/* ==================================================================== */
-/* --- ESTILOS DE INDICADORES DE TAREA (Prioridad y Fecha) --- */
-/* ==================================================================== */
 
-/* --- 1. ESTILOS DE PRIORIDAD (Color de Texto) --- */
-/* (El color por defecto del h4 es tu morado de marca, lo usamos para 'Media') */
+/*ESTILOS DE INDICADORES DE TAREA */
 
-/* Prioridad Alta (Rojo) */
+/* ESTILOS DE PRIORIDAD (Color de Texto) */
+/* Prioridad Alta */
 .task-card p.priority-alta-text {
   color: #dc3545;
 }
+/*Prioridad Media*/
 .task-card p.priority-media-text {
   color: #ff9800;
 }
 
-/* Prioridad Baja (Gris) */
+/* Prioridad Baja */
 .task-card p.priority-baja-text {
   color: #555;
 }
 
-/* ==================================================================== */
 /* --- ESTILOS PARA LA FECHA LÍMITE DE TAREAS (taskManager.js) --- */
-/* ==================================================================== */
 
 /* Estilo base para el texto de la fecha */
 .task-due {
-  font-size: 0.8rem; /* Pequeño */
+  font-size: 0.8rem;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 12px;
-  align-self: flex-start; /* Se alinea a la izquierda */
-  margin-top: 5px; /* Espacio de la "píldora" de asignado */
+  align-self: flex-start;
+  margin-top: 5px;
 
-  /* Color por defecto (Gris) */
+  /* Color por defecto */
   background-color: #f0f0f0;
   color: #555;
 }
 
-/* ⚠️ Vence Hoy (Naranja) */
+/*Vence Hoy*/
 .task-due.due-today {
   background-color: #fff4e5;
   color: #ff9800;
 }
 
-/* ⏳ Vence Mañana (Amarillo/Azul claro) */
+/*Vence Mañana*/
 .task-due.due-soon {
   background-color: #e8f0fe; /* Tu color de sidebar hover */
   color: #1a73e8;
 }
 
-/* 🛑 Vencida (Rojo) */
+/* Vencida*/
 .task-due.overdue {
   background-color: #fbebee; /* Tu color de "delete" hover */
   color: #dc3545;
 }
 .task-card.due-overdue {
-  /* Vencida (Rojo) */
+  /* Vencida */
   border-left: 5px solid #dc3545;
 }
 .task-card.due-today {
-  /* Vence Hoy (Naranja/Amarillo) */
+  /* Vence Hoy  */
   border-left: 5px solid #ffc107;
 }
 .task-card.due-soon {
   /* Vence Mañana (Azul) */
   border-left: 5px solid #1a73e8;
 }
-/* ==================================================================== */
-/* --- ESTILOS PARA TAREAS COMPLETADAS (Kanban) --- */
-/* ==================================================================== */
+
+/*ESTILOS PARA TAREAS COMPLETADAS (Kanban)*/
 
 .task-card.is-completed {
-  /* 1. La hacemos semitransparente */
   opacity: 0.7;
-
-  /* 2. El cursor cambia a "no permitido" en lugar de "agarrar" */
   cursor: not-allowed;
 }
 
 .task-card.is-completed:hover {
-  /* 3. Quitamos los efectos hover para que no parezca interactiva */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra normal */
-  transform: none; /* Sin levantamiento */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: none;
 }
 
 .task-card.is-completed h4 {
-  /* 4. Tachamos el título */
   text-decoration: line-through;
-  color: #777; /* Color de prioridad gris */
+  color: #777;
 }
 
 .task-card.is-completed .task-assignee,
@@ -1113,31 +1060,104 @@ a.flexContainer {
   opacity: 0.8;
 }
 .task-due.completed-on-time {
-  background-color: #e8f5e9; /* Verde muy claro */
-  color: #4caf50; /* Verde */
+  background-color: #e8f5e9;
+  color: #4caf50;
 }
 
 .task-due.completed-late {
-  background-color: #fbebee; /* Tu color de "delete" hover */
-  color: #dc3545; /* Tu color de "delete" */
+  background-color: #fbebee;
+  color: #dc3545;
 }
-/* ==================================================================== */
-/* --- ESTILOS PARA EL DASHBOARD DE ADMINISTRADOR (adminDashboard.js) --- */
-/* ==================================================================== */
+/* --- ESTILOS PARA LOS COMENTARIOS DE TAREAS --- */
 
-/* 1. El Contenedor del Grid Principal */
+.task-comments-section {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  padding-top: 1rem;
+}
+
+.task-comments-section h3 {
+  color: white;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* Lista de comentarios (área con scroll) */
+.task-comments-list {
+  overflow-y: auto;
+  max-height: 250px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin-bottom: 1rem;
+}
+.task-comments-list p.no-comments-msg {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+.comment-item {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.comment-author {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #640093;
+}
+.comment-content {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 5px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.comment-date {
+  font-size: 0.75rem;
+  color: #777;
+}
+.comment-form {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.comment-form input[type="text"] {
+  flex-grow: 1;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 0.9rem;
+}
+.comment-form button[type="submit"] {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #1a73e8;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.comment-form button[type="submit"]:hover {
+  background-color: #105cb8;
+}
+/* --- ESTILOS PARA EL DASHBOARD DE ADMINISTRADOR (adminDashboard.js) --- */
+
+/*Contenedor del Grid Principal */
 .dashboard-grid {
   display: grid;
-  /* 4 columnas en pantallas grandes */
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   padding: 20px;
   width: 100%;
 }
 
-/* 2. Tarjetas de KPIs (las 4 tarjetas superiores) */
+/* Tarjetas de KPIs*/
 .kpi-card {
-  /* Reutilizamos tus estilos de tarjeta de .card-details */
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
@@ -1155,56 +1175,44 @@ a.flexContainer {
 .kpi-card p {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #640093; /* Tu color de marca */
+  color: #640093;
 }
 
-/* 3. Tarjetas de Gráficos (Pastel y Barras) */
+/*Tarjetas de Gráficos (Pastel y Barras) */
 .chart-card {
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   padding: 20px;
-
-  /* ¡CLAVE! Cada gráfico ocupará 2 columnas de ancho */
   grid-column: span 2;
-
-  /* ¡CLAVE! Damos al contenedor del gráfico una altura fija */
   height: 400px;
   display: flex;
   flex-direction: column;
 }
 .chart-wrapper {
   position: relative;
-  flex-grow: 1; /* Ocupa el espacio restante en la tarjeta */
-
-  /* Asegura que el contenedor no se encoja incorrectamente */
+  flex-grow: 1;
   min-height: 0;
 }
-/* (Opcional: puedes borrar la regla .chart-card canvas que tenías) */
 .chart-card h3 {
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
   margin-bottom: 15px;
-  flex-shrink: 0; /* Evita que el título se encoja */
+  flex-shrink: 0;
 }
 .chart-card canvas {
-  /* Asegura que el canvas no se desborde (aunque Chart.js lo maneja) */
   max-width: 100%;
   max-height: 100%;
 }
 
-/* 4. Tarjetas de Listas (Usuarios Activos y Bitácora) */
+/*Tarjetas de Listas (Usuarios Activos y Bitácora) */
 .list-card {
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   padding: 20px;
-
-  /* También ocupan 2 columnas */
   grid-column: span 2;
-
-  /* Permite que la lista interna tenga scroll si es necesario */
   height: 400px;
   display: flex;
   flex-direction: column;
@@ -1222,7 +1230,7 @@ a.flexContainer {
   list-style: none;
   padding: 0;
   margin: 0;
-  overflow-y: auto; /* Scroll interno para las listas */
+  overflow-y: auto;
   flex-grow: 1;
 }
 .list-card li {
@@ -1244,45 +1252,4 @@ a.flexContainer {
 .list-card li small {
   font-size: 0.8rem;
   color: #777;
-}
-
-/* =========================================== */
-/* --- RESPONSIVIDAD DEL DASHBOARD --- */
-/* =========================================== */
-
-/* Para tablets (ej. 1024px) */
-@media (max-width: 1024px) {
-  .dashboard-grid {
-    /* Cambiamos a 2 columnas */
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Los gráficos y listas ahora ocupan el ancho completo (span 2) */
-}
-
-/* Para móviles (ej. 768px) */
-@media (max-width: 768px) {
-  .dashboard-grid {
-    /* Cambiamos a 1 sola columna */
-    grid-template-columns: 1fr;
-    padding: 10px;
-  }
-
-  /* Forzamos a que todo ocupe 1 columna */
-  .kpi-card,
-  .chart-card,
-  .list-card {
-    grid-column: span 1;
-  }
-
-  /* Ajustamos la altura en móviles */
-  .chart-card {
-    height: 300px;
-  }
-  .list-card {
-    height: 350px;
-  }
-  .kpi-card p {
-    font-size: 2rem;
-  }
 }
