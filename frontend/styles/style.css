@@ -1085,6 +1085,43 @@ a.flexContainer {
   border-left: 5px solid #1a73e8;
 }
 /* ==================================================================== */
+/* --- ESTILOS PARA TAREAS COMPLETADAS (Kanban) --- */
+/* ==================================================================== */
+
+.task-card.is-completed {
+  /* 1. La hacemos semitransparente */
+  opacity: 0.7;
+
+  /* 2. El cursor cambia a "no permitido" en lugar de "agarrar" */
+  cursor: not-allowed;
+}
+
+.task-card.is-completed:hover {
+  /* 3. Quitamos los efectos hover para que no parezca interactiva */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra normal */
+  transform: none; /* Sin levantamiento */
+}
+
+.task-card.is-completed h4 {
+  /* 4. Tachamos el título */
+  text-decoration: line-through;
+  color: #777; /* Color de prioridad gris */
+}
+
+.task-card.is-completed .task-assignee,
+.task-card.is-completed .task-due {
+  opacity: 0.8;
+}
+.task-due.completed-on-time {
+  background-color: #e8f5e9; /* Verde muy claro */
+  color: #4caf50; /* Verde */
+}
+
+.task-due.completed-late {
+  background-color: #fbebee; /* Tu color de "delete" hover */
+  color: #dc3545; /* Tu color de "delete" */
+}
+/* ==================================================================== */
 /* --- ESTILOS PARA EL DASHBOARD DE ADMINISTRADOR (adminDashboard.js) --- */
 /* ==================================================================== */
 

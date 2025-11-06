@@ -168,36 +168,55 @@ export async function getTaskById(taskId, actorId) {
  * Actualiza el estado de una tarea (KANBAN).
  */
 export async function updateTaskStatus(taskId, status, actorId) {
-  // 1. Obtener la tarea para verificar permisos
+  // 1. Obtener la tarea para verificar permisos Y el estado anterior
   const task = await getTaskById(taskId, actorId);
   if (!task) {
     throw new Error("Tarea no encontrada o acceso denegado.");
   }
+  let updateQuery = "";
+  const values = [taskId, status];
 
-  // 2. Actualizar el estado
-  const updateQuery = `
-    UPDATE tasks SET status = $2
-    WHERE id = $1
-    RETURNING *
-  `.trim();
+  if (status === "Hecho" && task.status !== "Hecho") {
+    // Caso 1: Tarea se está COMPLETANDO AHORA
+    updateQuery = `
+      UPDATE tasks 
+      SET status = $2, completed_at = NOW() 
+      WHERE id = $1
+      RETURNING *
+    `.trim();
+  } else if (status !== "Hecho" && task.status === "Hecho") {
+    // Caso 2: Tarea se está RE-ABRIENDO
+    updateQuery = `
+      UPDATE tasks 
+      SET status = $2, completed_at = NULL 
+      WHERE id = $1
+      RETURNING *
+    `.trim();
+  } else {
+    // Caso 3: Movimiento normal (ej. En Progreso -> En Revisión)
+    updateQuery = `
+      UPDATE tasks 
+      SET status = $2 
+      WHERE id = $1
+      RETURNING *
+    `.trim();
+  }
 
-  const { rows } = await pool.query(updateQuery, [taskId, status]);
+  // 2. Ejecutar la consulta
+  const { rows } = await pool.query(updateQuery, values);
   const updatedTask = rows[0];
 
-  // Bitácora
+  // 3. Bitácora
   if (updatedTask) {
-    // No necesitamos actorName, logAction lo tiene
     const { taskTitle } = await getLogDetails(null, taskId);
     logAction({
       userId: actorId,
       projectId: task.project_id,
-      // CORREGIDO: String simplificado
       action: `TASK_STATUS_UPDATED: "${taskTitle}" a "${status}"`,
     });
   }
   return updatedTask;
 }
-
 /**
  * Actualiza los campos generales de una tarea (título, desc, prioridad, etc.).
  */
@@ -229,6 +248,24 @@ export async function updateTask(taskId, data, actorId) {
     }
   }
 
+  // --- INICIO DE LA NUEVA LÓGICA (para completed_at) ---
+  // Comprobar si el 'status' se está actualizando
+  if (data.status !== undefined) {
+    // Añadir el status al query
+    fields.push(`status = $${index++}`);
+    values.push(data.status);
+
+    // Comprobar si debemos actualizar completed_at
+    if (data.status === "Hecho" && task.status !== "Hecho") {
+      // Completando la tarea
+      fields.push(`completed_at = NOW()`);
+    } else if (data.status !== "Hecho" && task.status === "Hecho") {
+      // Re-abriendo la tarea
+      fields.push(`completed_at = NULL`);
+    }
+  }
+  // --- FIN DE LA NUEVA LÓGICA ---
+
   if (fields.length === 0) {
     return task; // No hay nada que actualizar
   }
@@ -251,14 +288,12 @@ export async function updateTask(taskId, data, actorId) {
     logAction({
       userId: actorId,
       projectId: task.project_id,
-      // CORREGIDO: String simplificado
       action: `TASK_DETAILS_UPDATED: "${taskTitle}"`,
     });
   }
 
   return updatedTask;
 }
-
 /**
  * Elimina una tarea.
  */

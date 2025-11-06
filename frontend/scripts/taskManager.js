@@ -69,73 +69,112 @@ export async function renderKanbanBoard(container, projectId) {
 
 // --- 2. FUNCIÓN PARA CREAR TARJETAS (SIN CAMBIOS) ---
 
+// EN: scripts/taskManager.js
+
 function createTaskCard(task) {
   let dueDateHtml = "";
-  let dueDateClass = "";
-  if (task.due_date) {
-    const today = new Date();
-    const dueDate = new Date(task.due_date);
-    // Normalizamos las fechas a medianoche para una comparación justa de "días"
-    today.setHours(0, 0, 0, 0);
-    dueDate.setHours(0, 0, 0, 0);
+  let dueDateClass = ""; // Para el borde
+  let priorityClass = ""; // Para el texto h4
 
-    const diffTime = dueDate.getTime() - today.getTime();
-    // Usamos Math.ceil para contar el día de hoy
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const isCompleted = task.status === "Hecho";
+  const isDraggable = !isCompleted;
+  const completedClass = isCompleted ? "is-completed" : ""; // Para el estilo "hecho" (atenuado, tachado)
 
-    // Formatear el mensaje y la clase CSS
-    if (diffDays < 0) {
-      const daysAgo = Math.abs(diffDays);
-      dueDateClass = "due-overdue"; // Clase para el borde rojo
-      dueDateHtml = `<span class="task-due overdue">Venció hace ${daysAgo} ${
-        daysAgo === 1 ? "día" : "días"
-      }</span>`;
-    } else if (diffDays === 0) {
-      dueDateClass = "due-today"; // Clase para el borde naranja
-      dueDateHtml = `<span class="task-due due-today">⚠️ Vence Hoy</span>`;
-    } else if (diffDays === 1) {
-      dueDateClass = "due-soon"; // Clase para el borde azul
-      dueDateHtml = `<span class="task-due due-soon">Vence Mañana</span>`;
+  // --- INICIO DE LA NUEVA LÓGICA DE FECHAS ---
+
+  if (isCompleted) {
+    // --- LÓGICA PARA TAREAS CERRADAS ---
+
+    // Comprobar si tenía fecha de entrega y fecha de finalización
+    if (task.completed_at && task.due_date) {
+      const completedDate = new Date(task.completed_at);
+      const dueDate = new Date(task.due_date);
+      completedDate.setHours(0, 0, 0, 0);
+      dueDate.setHours(0, 0, 0, 0);
+
+      // Comparamos: ¿Se completó *después* de la fecha de entrega?
+      const diffTime = completedDate.getTime() - dueDate.getTime();
+      // Usamos Math.floor para ser justos (completar el mismo día es 0)
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= 0) {
+        // Se completó a tiempo (el mismo día o antes)
+        dueDateHtml = `<span class="task-due completed-on-time">✅ Finalizada a tiempo</span>`;
+      } else {
+        // Se completó tarde
+        dueDateClass = "due-overdue"; // Mantenemos el borde rojo para que se note
+        dueDateHtml = `<span class="task-due completed-late">🛑 Finalizada con ${diffDays} ${
+          diffDays === 1 ? "día" : "días"
+        } de retraso</span>`;
+      }
     } else {
-      dueDateHtml = `<span class="task-due">Vence en ${diffDays} días</span>`;
+      // Se completó, pero no tenía fecha de entrega (o de finalización, si hay datos viejos)
+      dueDateHtml = `<span class="task-due completed-on-time">✅ Finalizada</span>`;
     }
-  }
-  let priorityClass = "";
-  if (task.priority === "Alta") {
-    priorityClass = "priority-alta-text";
-  } else if (task.priority === "Baja" || !task.priority) {
-    priorityClass = "priority-baja-text";
   } else {
-    priorityClass = "priority-media-text";
+    // --- LÓGICA PARA TAREAS ABIERTAS (Tu código actual) ---
+    if (task.due_date) {
+      const today = new Date();
+      const dueDate = new Date(task.due_date);
+      today.setHours(0, 0, 0, 0);
+      dueDate.setHours(0, 0, 0, 0);
+      const diffTime = dueDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        const daysAgo = Math.abs(diffDays);
+        dueDateClass = "due-overdue"; // Borde rojo
+        dueDateHtml = `<span class="task-due overdue">Venció hace ${daysAgo} ${
+          daysAgo === 1 ? "día" : "días"
+        }</span>`;
+      } else if (diffDays === 0) {
+        dueDateClass = "due-today"; // Borde naranja
+        dueDateHtml = `<span class="task-due due-today">⚠️ Vence Hoy</span>`;
+      } else if (diffDays === 1) {
+        dueDateClass = "due-soon"; // Borde azul
+        dueDateHtml = `<span class="task-due due-soon">Vence Mañana</span>`;
+      } else {
+        dueDateHtml = `<span class="task-due">Vence en ${diffDays} días</span>`;
+      }
+    }
+    // Si no tiene due_date y no está completada, no se muestra nada.
   }
+
+  // --- FIN DE LA LÓGICA DE FECHAS ---
+
+  // --- Lógica de Prioridad (sin cambios) ---
+  if (task.priority === "Alta") priorityClass = "priority-alta-text";
+  else if (task.priority === "Baja") priorityClass = "priority-baja-text";
+
   // Genera el HTML de la tarjeta
   return `
-    <div class="task-card ${dueDateClass}" draggable="true" data-task-id="${
+    <div class="task-card ${dueDateClass} ${completedClass}" draggable="${isDraggable}" data-task-id="${
     task.id
   }">
-      <h4>${task.title}</h4>
-      <p class=${priorityClass}>Prioridad: ${task.priority}</p>
+      <h4 class="${priorityClass}">${task.title}</h4>
+      <p>Prioridad: ${task.priority}</p>
       ${
         task.assigned_to_name
           ? `<span class="task-assignee">${task.assigned_to_name}</span>`
           : ""
       }
-      ${dueDateHtml} </div>
+      ${dueDateHtml}
+    </div>
   `;
 }
 
 // --- 3. MANEJADORES DE EVENTOS (IMPLEMENTACIÓN COMPLETA) ---
 
 function addKanbanEventListeners(container, projectId, members) {
-  const columns = container.querySelectorAll(".kanban-column");
   const taskLists = container.querySelectorAll(".kanban-tasks-list");
   const cards = container.querySelectorAll(".task-card");
   const addButtons = container.querySelectorAll(".add-task-btn");
 
-  // --- A. Eventos de Drag & Drop (Arrastrar y Soltar) ---
+  // --- A. Eventos de Drag & Drop ---
 
   cards.forEach((card) => {
     card.addEventListener("dragstart", (e) => {
+      // (No puedes arrastrar si draggable="false", así que esto ya es seguro)
       e.dataTransfer.setData("text/plain", card.dataset.taskId);
       setTimeout(() => card.classList.add("dragging"), 0);
     });
@@ -146,7 +185,8 @@ function addKanbanEventListeners(container, projectId, members) {
 
   taskLists.forEach((list) => {
     list.addEventListener("dragover", (e) => {
-      e.preventDefault(); // Necesario para permitir el drop
+      e.preventDefault();
+      // Muestra dónde caería la tarjeta
       const draggingCard = document.querySelector(".dragging");
       if (draggingCard) {
         list.appendChild(draggingCard);
@@ -159,26 +199,34 @@ function addKanbanEventListeners(container, projectId, members) {
       const newStatus = list.dataset.status;
       const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
 
-      // Mover el elemento en el DOM (ya se hizo en dragover, pero confirmamos)
-      list.appendChild(taskElement);
+      // --- ¡INICIO DE LA NUEVA LÓGICA DE CONFIRMACIÓN! ---
 
-      // Llamada a la API
-      try {
-        await apiRequest(
-          `/projects/${projectId}/tasks/${taskId}/status`,
-          "PATCH",
-          { status: newStatus }
-        );
-        // Opcional: Pequeña confirmación de éxito no intrusiva
-      } catch (error) {
-        console.error("Error al mover la tarea:", error);
-        Swal.fire(
-          "Error",
-          `No se pudo mover la tarea: ${error.message}`,
-          "error"
-        );
-        // TODO: Devolver la tarjeta a su columna original si falla la API
+      // Si el nuevo estado es "Hecho", pedimos confirmación
+      if (newStatus === "Hecho") {
+        Swal.fire({
+          title: "¿Finalizar esta tarea?",
+          text: "Esto marcará la tarea como completada y la bloqueará.",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, ¡finalizar!",
+          cancelButtonText: "Cancelar",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            // Usuario confirmó: Llama a la API y refresca
+            await handleTaskDrop(taskId, newStatus, projectId, container);
+          } else {
+            // Usuario canceló: Refrescamos el tablero para
+            // devolver la tarjeta a su columna original.
+            await renderKanbanBoard(container, projectId);
+          }
+        });
+      } else {
+        // Si no es "Hecho" (ej. "En Progreso"), solo llama a la API y refresca
+        await handleTaskDrop(taskId, newStatus, projectId, container);
       }
+      // --- FIN DE LA NUEVA LÓGICA ---
     });
   });
 
@@ -193,12 +241,38 @@ function addKanbanEventListeners(container, projectId, members) {
   // --- C. Clic en una tarjeta (para Editar) ---
   cards.forEach((card) => {
     card.addEventListener("click", (e) => {
+      // Prevenir que se abra el modal si estamos arrastrando
+      if (e.target.closest(".dragging")) return;
+
       const taskId = e.target.closest(".task-card").dataset.taskId;
       openTaskModal(taskId, projectId, null, members); // taskId = Modo Edición
     });
   });
 }
 
+/**
+ * Funcion para llamar a la API para actualizar el estado y refresca el tablero completo.
+ */
+async function handleTaskDrop(taskId, newStatus, projectId, container) {
+  try {
+    // 1. Llama a la API para actualizar el estado
+    await apiRequest(`/projects/${projectId}/tasks/${taskId}/status`, "PATCH", {
+      status: newStatus,
+    });
+
+    // 2. ¡LA SOLUCIÓN CLAVE!
+    // Refrescamos el tablero completo. Esto:
+    // - Muestra la tarjeta en la nueva columna.
+    // - Vuelve a ejecutar createTaskCard(), aplicando 'draggable="false"'
+    //   y la clase '.is-completed' a la tarjeta que se movió a "Hecho".
+    await renderKanbanBoard(container, projectId);
+  } catch (error) {
+    console.error("Error al mover la tarea:", error);
+    Swal.fire("Error", `No se pudo mover la tarea: ${error.message}`, "error");
+    // Si la API falla, refrescamos para restaurar el estado original
+    await renderKanbanBoard(container, projectId);
+  }
+}
 // --- 4. LÓGICA DEL MODAL DE TAREAS (¡NUEVO!) ---
 // (Asume que el HTML del modal está en mainPage.html con id="taskModal")
 
@@ -211,12 +285,32 @@ const taskAssigneeSelect = document.getElementById("taskAssigneeSelect");
 /**
  * Abre el modal de Tareas, sea para Crear o Editar.
  */
-async function openTaskModal(taskId, projectId, status, members) {
-  const form = taskForm; // Referencia al formulario
-  form.reset(); // Limpiar el formulario
+// EN: scripts/taskManager.js
 
-  // Poblar el <select> de miembros
-  taskAssigneeSelect.innerHTML = '<option value="">(Sin asignar)</option>'; // Resetear
+async function openTaskModal(taskId, projectId, status, members) {
+  const form = taskForm;
+  form.reset();
+
+  // --- 1. Definir los elementos del formulario ---
+  // (Los guardamos en variables para fácil acceso)
+  const taskTitleInput = document.getElementById("taskTitle");
+  const taskDescInput = document.getElementById("taskDescription");
+  const taskStatusSelect = document.getElementById("taskStatusSelect");
+  const taskPrioritySelect = document.getElementById("taskPrioritySelect");
+  const taskDueDateInput = document.getElementById("taskDueDate");
+  const deleteBtn = document.getElementById("deleteTaskBtn");
+  // Agrupar todos los campos editables
+  const formFields = [
+    taskTitleInput,
+    taskDescInput,
+    taskStatusSelect,
+    taskPrioritySelect,
+    taskAssigneeSelect,
+    taskDueDateInput,
+  ];
+
+  // --- 2. Poblar el <select> de miembros (sin cambios) ---
+  taskAssigneeSelect.innerHTML = '<option value="">(Sin asignar)</option>';
   if (members && Array.isArray(members)) {
     members.forEach((member) => {
       taskAssigneeSelect.innerHTML += `
@@ -227,26 +321,20 @@ async function openTaskModal(taskId, projectId, status, members) {
 
   // Almacenar IDs para el submit
   form.dataset.projectId = projectId;
-  // --- INICIO DE LA LÓGICA DE PERMISOS (NUEVO) ---
-  const deleteBtn = document.getElementById("deleteTaskBtn");
 
-  // 1. Averiguar si el usuario actual es admin de este proyecto
+  // --- 3. Lógica de Permisos (sin cambios) ---
   const project = appState.allProjects.find((p) => p.id == projectId);
   const isOwner = project && project.created_by === appState.currentUser.id;
   const member = members.find((m) => m.id === appState.currentUser.id);
   const isProjectAdmin = member && member.role_in_project === "admin";
-  const canManage = isOwner || isProjectAdmin;
+  const canManage = isOwner || isProjectAdmin; // El usuario es Admin o Creador
+
   if (taskId) {
     // --- MODO EDICIÓN ---
     taskFormTitle.textContent = "Editar Tarea";
     submitTaskBtn.textContent = "Guardar Cambios";
-    form.dataset.taskId = taskId; // Guardar el ID de la tarea
-    // 2. Mostrar el botón de eliminar SOLO si es admin Y está en modo edición
-    if (canManage) {
-      deleteBtn.style.display = "block";
-    } else {
-      deleteBtn.style.display = "none";
-    }
+    form.dataset.taskId = taskId;
+
     try {
       // Cargar datos de la tarea
       const response = await apiRequest(
@@ -256,15 +344,30 @@ async function openTaskModal(taskId, projectId, status, members) {
       const task = response.data;
 
       // Rellenar el formulario
-      document.getElementById("taskTitle").value = task.title;
-      document.getElementById("taskDescription").value = task.description || "";
-      document.getElementById("taskStatusSelect").value = task.status;
-      document.getElementById("taskPrioritySelect").value = task.priority;
-      document.getElementById("taskAssigneeSelect").value =
-        task.assigned_to || "";
-      document.getElementById("taskDueDate").value = task.due_date
-        ? task.due_date.split("T")[0]
-        : ""; // Formatear fecha
+      taskTitleInput.value = task.title;
+      taskDescInput.value = task.description || "";
+      taskStatusSelect.value = task.status;
+      taskPrioritySelect.value = task.priority;
+      taskAssigneeSelect.value = task.assigned_to || "";
+      taskDueDateInput.value = task.due_date ? task.due_date.split("T")[0] : "";
+
+      // --- 4. ¡NUEVA LÓGICA DE READ-ONLY! ---
+      const isCompleted = task.status === "Hecho";
+
+      if (isCompleted && !canManage) {
+        // Tarea "Hecha" Y NO eres admin: Bloquear todo
+        taskFormTitle.textContent = "Ver Tarea (Completada)";
+        formFields.forEach((field) => (field.disabled = true));
+        submitTaskBtn.style.display = "none";
+        deleteBtn.style.display = "none";
+      } else {
+        // Tarea NO "Hecha" O SÍ eres admin: Habilitar todo
+        formFields.forEach((field) => (field.disabled = false));
+        submitTaskBtn.style.display = "block";
+        // Mostrar botón de eliminar solo si puede gestionar
+        deleteBtn.style.display = canManage ? "block" : "none";
+      }
+      // --- FIN DE LA LÓGICA READ-ONLY ---
     } catch (error) {
       Swal.fire(
         "Error",
@@ -278,10 +381,15 @@ async function openTaskModal(taskId, projectId, status, members) {
     taskFormTitle.textContent = "Crear Nueva Tarea";
     submitTaskBtn.textContent = "Crear Tarea";
     form.dataset.taskId = ""; // Limpiar el ID
-    deleteBtn.style.display = "none";
+
+    // Resetear: Habilitar todos los campos y mostrar botón de guardar
+    formFields.forEach((field) => (field.disabled = false));
+    submitTaskBtn.style.display = "block";
+    deleteBtn.style.display = "none"; // Ocultar siempre al crear
+
     // Asignar el estado de la columna donde se hizo clic
     if (status) {
-      document.getElementById("taskStatusSelect").value = status;
+      taskStatusSelect.value = status;
     }
   }
 
