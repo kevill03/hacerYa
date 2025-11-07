@@ -3,16 +3,14 @@ import { apiRequest } from "./api.js";
 // Variable para guardar las instancias de los gráficos y destruirlos
 let charts = [];
 
-/**
- * Función principal para renderizar el dashboard de admin.
- */
+/**Función principal para renderizar el dashboard de admin.*/
 export async function renderAdminDashboard(container) {
   // Limpiar gráficos anteriores para evitar errores de memoria
   charts.forEach((chart) => chart.destroy());
   charts = [];
   container.innerHTML = `<div class="loading-spinner">Cargando Estadísticas...</div>`;
   try {
-    // 1. Definir el HTML del esqueleto del dashboard
+    //Definir el HTML del esqueleto del dashboard
     const dashboardHTML = `
       <div class="dashboard-grid">
         <div class="kpi-card" id="kpi-users"><h3>Total Usuarios</h3><p>...</p></div>
@@ -44,7 +42,7 @@ export async function renderAdminDashboard(container) {
     `;
     container.innerHTML = dashboardHTML;
 
-    // 2. Llamar a todas las APIs en paralelo
+    //Llamar a todas las APIs en paralelo
     const [kpis, statusData, projectData, usersData, logData] =
       await Promise.all([
         apiRequest("/admin/kpis", "GET"),
@@ -54,7 +52,7 @@ export async function renderAdminDashboard(container) {
         apiRequest("/activity-log", "GET"),
       ]);
 
-    // 3. Rellenar los datos
+    //Rellenar los datos
     populateKPIs(kpis.data);
     populateTasksByStatus(statusData.data);
     populateTasksPerProject(projectData.data);
@@ -65,8 +63,6 @@ export async function renderAdminDashboard(container) {
     container.innerHTML = `<h2 class="error-message">❌ Error al cargar el dashboard: ${error.message}</h2>`;
   }
 }
-
-// --- Funciones "Helper" para rellenar el dashboard ---
 
 function populateKPIs(data) {
   document.getElementById("kpi-users").querySelector("p").textContent =
@@ -90,17 +86,17 @@ function populateTasksByStatus(data) {
           label: "Tareas",
           data: data.map((row) => row.count), // [5, 2, ...]
           backgroundColor: [
-            "#4CAF50", // Hecho (Verde)
-            "#FFC107", // En revisión (Amarillo)
-            "#2196F3", // En progreso (Azul)
-            "#E0E0E0", // Por hacer (Gris)
+            "#4CAF50", // Hecho
+            "#FFC107", // En revisión
+            "#2196F3", // En progreso
+            "#E0E0E0", // Por hacer
           ],
         },
       ],
     },
     options: { responsive: true, maintainAspectRatio: false },
   });
-  charts.push(chart); // Guardar para destruir después
+  charts.push(chart);
 }
 
 function populateTasksPerProject(data) {

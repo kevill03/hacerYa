@@ -1,5 +1,3 @@
-// --- CONFIGURACIÓN Y CONSTANTES DE API ---
-
 const PROD_API_URL = "https://hacerya.onrender.com/api";
 const DEV_API_URL = "http://localhost:3000/api";
 
@@ -10,9 +8,6 @@ const BASE_API_URL =
     : PROD_API_URL;
 
 const getToken = () => localStorage.getItem("token");
-
-// --- FUNCIÓN DE FETCH GENERALIZADA ---
-// (¡Asegúrate de exportarla!)
 
 export const apiRequest = async (endpoint, method = "GET", body = null) => {
   const token = getToken();

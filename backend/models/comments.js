@@ -1,10 +1,7 @@
 import { pool } from "../src/db.js";
 import { logAction } from "../src/utils/logAction.js";
 
-/**
- * Obtiene todos los comentarios de una tarea específica.
- * Une la tabla 'users' para obtener el nombre del autor.
- */
+/**Obtiene todos los comentarios de una tarea específica.Une la tabla 'users' para obtener el nombre del autor.*/
 export async function getCommentsByTaskId(taskId) {
   const query = `
     SELECT 
@@ -23,9 +20,7 @@ export async function getCommentsByTaskId(taskId) {
   return rows;
 }
 
-/**
- * Añade un nuevo comentario a una tarea.
- */
+/**Añade un nuevo comentario a una tarea*/
 export async function createComment(taskId, userId, content) {
   const query = `
     INSERT INTO task_comments (task_id, user_id, content)

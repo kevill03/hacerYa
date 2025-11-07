@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
-import projectRoutes from "./routes/projects.js"; // Importamos las rutas de proyectos
+import projectRoutes from "./routes/projects.js";
 import workspacesRoutes from "./routes/workspaces.js";
 import activityLogRouter from "./routes/activityLog.js";
 import adminRouter from "./routes/admin.js";

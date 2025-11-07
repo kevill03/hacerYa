@@ -1,25 +1,24 @@
 import { Router } from "express";
-import { pool } from "../db.js"; // Importar pool para el helper de logs
+import { pool } from "../db.js";
 import * as WorkspaceModel from "../../models/workspace.js";
 import { verifyToken } from "../middleware/auth.js";
 
-// ¡CLAVE! mergeParams: true permite a este router acceder al :id de /workspaces/:id
+//mergeParams: true permite a este router acceder al :id de /workspaces/:id
 const router = Router({ mergeParams: true });
 
 // Proteger todas las rutas de miembros
 router.use(verifyToken);
 
-// --- Funciones Helper para obtener nombres (para los logs) ---
-// (Esta función nos ayuda a obtener los nombres para los logs en PUT y DELETE)
+// --- Funciones para obtener nombres (para los logs)
 async function getLogDetails(workspaceId, actorId, memberId) {
   try {
     // Usamos Promise.all para hacer las búsquedas en paralelo
     const [workspaceRes, actorRes, memberRes] = await Promise.all([
-      // 1. Obtener el nombre del workspace
+      // Obtener el nombre del workspace
       WorkspaceModel.getWorkspaceById(workspaceId, actorId),
-      // 2. Obtener el nombre del actor (quien hace la acción)
+      // Obtener el nombre del actor (quien hace la acción)
       pool.query("SELECT full_name FROM users WHERE id = $1", [actorId]),
-      // 3. Obtener el nombre del miembro (sobre quien recae la acción)
+      // Obtener el nombre del miembro (sobre quien recae la acción)
       pool.query("SELECT full_name FROM users WHERE id = $1", [memberId]),
     ]);
 
@@ -57,7 +56,7 @@ router.get("/", async (req, res) => {
       actorId
     );
 
-    // CORRECCIÓN: Manejar el caso donde el actor no es miembro
+    // Manejar del caso donde el actor no es miembro
     if (members === null) {
       return res.status(403).json({
         message: "Acceso denegado. No eres miembro de este workspace.",
@@ -76,7 +75,6 @@ router.get("/", async (req, res) => {
 // ----------------------------------------------------------------------
 router.post("/", async (req, res) => {
   const { id: workspaceId } = req.params;
-  // CORRECCIÓN: Añadir valor por defecto 'member' al rol
   const { memberEmail, role = "member" } = req.body;
   const actorId = req.userId;
 
@@ -87,7 +85,7 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // 1. Validar que el actor tenga permisos (Admin/Creador)
+    // Validar que el actor tenga permisos (Admin/Creador)
     const hasPermission = await WorkspaceModel.isWorkspaceAdminOrCreator(
       workspaceId,
       actorId
@@ -99,15 +97,13 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // 2. Obtener datos del miembro y del workspace
+    // Obtener datos del miembro y del workspace
     const member = await WorkspaceModel.getUserIdByEmail(memberEmail);
     if (!member) {
       return res
         .status(404)
         .json({ message: `Usuario con email ${memberEmail} no encontrado.` });
     }
-
-    // CORRECCIÓN: Definir memberId
     const memberId = member.id;
 
     const workspace = await WorkspaceModel.getWorkspaceById(
@@ -118,17 +114,15 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ message: "Workspace no encontrado." });
     }
 
-    // 3. VALIDACIÓN DE LÓGICA DE NEGOCIO (¡Tu código ya lo tenía, excelente!)
     if (workspace.is_personal) {
       return res.status(403).json({
         message: "No se pueden añadir miembros a un workspace personal.",
       });
     }
 
-    // 4. Ejecutar la adición (Ahora con memberId correcto)
     const result = await WorkspaceModel.addMemberToWorkspace(
       workspaceId,
-      memberId, // <-- CORREGIDO
+      memberId,
       role,
       actorId,
       member.full_name, // memberName (para el log)
@@ -165,7 +159,7 @@ router.put("/:userId", async (req, res) => {
   }
 
   try {
-    // 1. Validar que el actor tenga permisos (Admin/Creador)
+    //Validar que el actor tenga permisos (Admin/Creador)
     const hasPermission = await WorkspaceModel.isWorkspaceAdminOrCreator(
       workspaceId,
       actorId
@@ -176,22 +170,22 @@ router.put("/:userId", async (req, res) => {
         .json({ message: "Permiso denegado. Solo administradores." });
     }
 
-    // 2. CORRECCIÓN: Obtener nombres para el log
+    //Obtener nombres para el log
     const { workspaceName, actorName, memberName } = await getLogDetails(
       workspaceId,
       actorId,
       memberIdToUpdate
     );
 
-    // 3. Ejecutar actualización
+    //Ejecutar actualización
     const result = await WorkspaceModel.updateMemberRole(
       workspaceId,
       memberIdToUpdate,
       role,
       actorId,
-      actorName, // <-- CORREGIDO
-      memberName, // <-- CORREGIDO
-      workspaceName // <-- CORREGIDO
+      actorName,
+      memberName,
+      workspaceName
     );
 
     if (result.rowCount === 0) {
@@ -212,7 +206,7 @@ router.delete("/:userId", async (req, res) => {
   const actorId = req.userId;
 
   try {
-    // 1. Validar que el actor tenga permisos (Admin/Creador)
+    //Validar que el actor tenga permisos (Admin/Creador)
     const hasPermission = await WorkspaceModel.isWorkspaceAdminOrCreator(
       workspaceId,
       actorId
@@ -223,21 +217,21 @@ router.delete("/:userId", async (req, res) => {
         .json({ message: "Permiso denegado. Solo administradores." });
     }
 
-    // 2. CORRECCIÓN: Obtener nombres para el log
+    //Obtener nombres para el log
     const { workspaceName, actorName, memberName } = await getLogDetails(
       workspaceId,
       actorId,
       memberIdToRemove
     );
 
-    // 3. Ejecutar eliminación
+    //Ejecutar eliminación
     const result = await WorkspaceModel.removeMemberFromWorkspace(
       workspaceId,
       memberIdToRemove,
       actorId,
-      actorName, // <-- CORREGIDO
-      memberName, // <-- CORREGIDO
-      workspaceName // <-- CORREGIDO
+      actorName,
+      memberName,
+      workspaceName
     );
 
     if (result.rowCount === 0) {
@@ -245,7 +239,7 @@ router.delete("/:userId", async (req, res) => {
     }
     res.status(204).send();
   } catch (error) {
-    // 4. CORRECCIÓN: Manejar el error específico del modelo
+    //Manejo de error específico del modelo
     console.error("Error al eliminar miembro:", error);
     if (error.message.includes("No se puede eliminar al creador")) {
       return res.status(403).json({ message: error.message });

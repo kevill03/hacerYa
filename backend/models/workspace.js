@@ -1,17 +1,9 @@
-import { pool } from "../src/db.js"; // Ruta corregida a la base de datos
-import { logAction } from "../src/utils/logAction.js"; // AÑADIDO: Importar la utilidad de bitácora
+import { pool } from "../src/db.js";
+import { logAction } from "../src/utils/logAction.js";
 
-/**
- * Módulo para interactuar con la tabla 'workspaces' y 'workspace_members'.
- */
-
-// --- Helpers de Workspaces ---
-
-/**
- * Verifica si el usuario autenticado es el creador del workspace O un administrador.
- */
+/**Verifica si el usuario autenticado es el creador del workspace O un administrador*/
 export async function isWorkspaceAdminOrCreator(workspaceId, userId) {
-  // 1. Verificar si es el creador (columna created_by)
+  // Verificar si es el creador (columna created_by)
   const isCreatorQuery = `
     SELECT id FROM workspaces WHERE id = $1 AND created_by = $2
     `.trim();
@@ -21,18 +13,15 @@ export async function isWorkspaceAdminOrCreator(workspaceId, userId) {
     return true;
   }
 
-  // 2. Si no es el creador, verificar si es administrador en workspace_members
+  // Si no es el creador, verificar si es administrador en workspace_members
   const isAdminQuery = `
     SELECT id FROM workspace_members 
     WHERE workspace_id = $1 AND user_id = $2 AND role_in_workspace = 'admin'
     `.trim();
   const isAdmin = await pool.query(isAdminQuery, [workspaceId, userId]);
-
   return isAdmin.rowCount > 0;
 }
-/**
- * Obtiene el ID y nombre completo de un usuario a partir de su correo electrónico.
- */
+/**Obtiene el ID y nombre completo de un usuario a partir de su correo electrónico*/
 export async function getUserIdByEmail(email) {
   const query = `
     SELECT id, full_name FROM users WHERE email = $1
@@ -41,11 +30,7 @@ export async function getUserIdByEmail(email) {
   return rows[0] || null; // Devuelve { id, full_name } o null
 }
 
-// --- READ (LEER) ---
-
-/**
- * Obtiene todos los workspaces a los que el usuario pertenece (creador o miembro).
- */
+/**Obtiene todos los workspaces a los que el usuario pertenece (creador o miembro)*/
 export async function getAllWorkspacesByUserId(userId) {
   const query = `
         SELECT DISTINCT
@@ -64,9 +49,7 @@ export async function getAllWorkspacesByUserId(userId) {
   return rows;
 }
 
-/**
- * Obtiene un workspace específico por ID, solo si el usuario tiene acceso.
- */
+/**Obtiene un workspace específico por ID, solo si el usuario tiene acceso*/
 export async function getWorkspaceById(workspaceId, userId) {
   const query = `
         SELECT DISTINCT w.*, u.full_name AS created_by_name
@@ -80,13 +63,8 @@ export async function getWorkspaceById(workspaceId, userId) {
   return rows[0] || null;
 }
 
-// --- CREATE (CREAR) ---
-
-/**
- * Crea un nuevo workspace y añade al creador como miembro y administrador.
- */
+/**Crea un nuevo workspace y añade al creador como miembro y administrador*/
 export async function createWorkspace({ name, description, created_by }) {
-  // 1. Crear el Workspace
   const createQuery = `
     INSERT INTO workspaces (name, description, created_by)
     VALUES ($1, $2, $3)
@@ -133,11 +111,7 @@ export async function createWorkspace({ name, description, created_by }) {
   return newWorkspace;
 }
 
-/**
- * Añade un miembro a un workspace.
- * @param {string} actorId - ID del usuario que ejecuta la acción.
- * @param {string} memberName - Nombre completo del miembro (para el log).
- */
+/**Añade un miembro a un workspace*/
 export async function addMemberToWorkspace(
   workspaceId,
   userId,
@@ -161,11 +135,11 @@ export async function addMemberToWorkspace(
     logAction({
       userId: actorId, // EL ACTOR de la acción
       workspaceId: workspaceId,
-      // Log más claro: "actorId añadió a memberName con rol X en workspaceName"
+      // Log "actorId añadió a memberName con rol X en workspaceName"
       action: `MEMBER_ADDED: ${memberName} como ${role} en ${workspaceName}`,
     });
   } else if (result.rowCount > 0) {
-    // Fallback por si los nombres no llegaron
+    // Excepcion por si los nombres no llegaron
     logAction({
       userId: actorId,
       workspaceId: workspaceId,
@@ -176,11 +150,7 @@ export async function addMemberToWorkspace(
   return result;
 }
 
-// --- UPDATE & DELETE Helpers ---
-
-/**
- * Verifica si el usuario es el creador/administrador del workspace.
- */
+/**Verifica si el usuario es el creador/administrador del workspace*/
 async function isWorkspaceCreator(workspaceId, userId) {
   const query = `
     SELECT id FROM workspaces 
@@ -190,27 +160,20 @@ async function isWorkspaceCreator(workspaceId, userId) {
   return result.rowCount > 0;
 }
 
-/**
- * Actualiza los datos de un workspace si el usuario es el creador.
- * @param {string} workspaceName - Nombre del workspace (pasado desde la ruta para el log).
- */
+/**Actualiza los datos de un workspace si el usuario es el creador*/
 export async function updateWorkspace(
   workspaceId,
   data,
   userId,
   workspaceName
 ) {
-  // --- 1. ¡NUEVA VALIDACIÓN DE PERMISOS! ---
-  // Reutilizamos el helper que ya existe en este archivo.
   const hasPermission = await isWorkspaceAdminOrCreator(workspaceId, userId);
-
   if (!hasPermission) {
-    // Si no tiene permiso, devolvemos rowCount 0 para que la ruta
-    // envíe el error "No encontrado o sin permiso".
+    // Si no tiene permiso, devolvemos rowCount 0 para que la ruta envíe el error "No encontrado o sin permiso".
     return { rowCount: 0 };
   }
 
-  // --- 2. Lógica para construir la query (sin cambios) ---
+  //Lógica para construir la query
   const fields = [];
   const values = [];
   let index = 1;
@@ -230,23 +193,18 @@ export async function updateWorkspace(
   if (fields.length === 0) {
     return { rowCount: 1 }; // No hay nada que actualizar
   }
-
-  // --- 3. ¡CORRECCIÓN EN LA QUERY! ---
   values.push(workspaceId);
   const workspaceIdIndex = index++;
-  // Ya no necesitamos pasar el userId al query, el permiso fue validado.
-
   const query = `
         UPDATE workspaces
         SET ${fields.join(", ")}
         WHERE id = $${workspaceIdIndex} -- <-- ¡WHERE SIMPLIFICADO!
         RETURNING *
     `.trim();
-
   const result = await pool.query(query, values);
   const updatedWorkspace = result.rows[0];
 
-  // --- 4. Lógica de Bitácora (sin cambios) ---
+  // Lógica de Bitácora
   if (result.rowCount > 0 && updatedWorkspace) {
     logAction({
       userId: userId,
@@ -260,28 +218,22 @@ export async function updateWorkspace(
   return result;
 }
 
-/**
- * Elimina un workspace si el usuario es el creador o el administrador.
- * @param {string} workspaceName - Nombre del workspace (pasado desde la ruta para el log).
- */
+/** Elimina un workspace si el usuario es el creador o el administrador*/
 export async function deleteWorkspace(workspaceId, userId, workspaceName) {
-  // --- 1. ¡NUEVA VALIDACIÓN DE PERMISOS! ---
   const hasPermission = await isWorkspaceAdminOrCreator(workspaceId, userId);
 
   if (!hasPermission) {
     return { rowCount: 0 };
   }
 
-  // --- 2. ¡CORRECCIÓN EN LA QUERY! ---
   const query = `
         DELETE FROM workspaces
         WHERE id = $1 -- <-- ¡WHERE SIMPLIFICADO!
         RETURNING name, id;
     `.trim();
-  // Ahora solo pasamos el workspaceId
+
   const result = await pool.query(query, [workspaceId]);
 
-  // --- 3. Lógica de Bitácora (sin cambios) ---
   if (result.rowCount > 0) {
     const deletedProject = result.rows[0];
     const workspaceId = deletedProject.workspace_id;
@@ -296,16 +248,12 @@ export async function deleteWorkspace(workspaceId, userId, workspaceName) {
 
   return result;
 }
-// ====================================================================
-// --- NUEVAS FUNCIONES PARA EL CRUD DE MIEMBROS ---
-// ====================================================================
 
-/**
- * Obtiene la lista de miembros de un workspace.
- * Solo permite la consulta si el 'actorId' es miembro de ese workspace.
+/**Obtiene la lista de miembros de un workspace.
+ Solo permite la consulta si el 'actorId' es miembro de ese workspace.
  */
 export async function getMembersByWorkspaceId(workspaceId, actorId) {
-  // 1. Verificar si el 'actorId' (quien pregunta) tiene permiso para ver
+  //Verificar si el 'actorId' (quien pregunta) tiene permiso para ver
   const checkAccessQuery = `
     SELECT 1 FROM workspace_members 
     WHERE workspace_id = $1 AND user_id = $2
@@ -320,7 +268,7 @@ export async function getMembersByWorkspaceId(workspaceId, actorId) {
     return null;
   }
 
-  // 2. Si tiene acceso, obtener la lista de todos los miembros
+  //Si tiene acceso, obtener la lista de todos los miembros
   const getMembersQuery = `
     SELECT u.id, u.full_name, u.email, wm.role_in_workspace
     FROM workspace_members wm
@@ -332,9 +280,7 @@ export async function getMembersByWorkspaceId(workspaceId, actorId) {
   return rows;
 }
 
-/**
- * Actualiza el rol de un miembro en un workspace.
- */
+/**Actualiza el rol de un miembro en un workspace*/
 export async function updateMemberRole(
   workspaceId,
   memberId,
@@ -364,10 +310,7 @@ export async function updateMemberRole(
   return result;
 }
 
-/**
- * Elimina un miembro de un workspace.
- * Incluye lógica de negocio para no permitir eliminar al creador.
- */
+/**Elimina un miembro de un workspace(Incluye lógica para no permitir eliminar al creador)*/
 export async function removeMemberFromWorkspace(
   workspaceId,
   memberIdToRemove,
@@ -376,7 +319,7 @@ export async function removeMemberFromWorkspace(
   memberName,
   workspaceName
 ) {
-  // 1. Verificar que no se está intentando eliminar al creador del workspace
+  //Verificar que no se está intentando eliminar al creador del workspace
   const workspaceCheck = await pool.query(
     "SELECT created_by FROM workspaces WHERE id = $1",
     [workspaceId]
@@ -389,7 +332,7 @@ export async function removeMemberFromWorkspace(
     throw new Error("No se puede eliminar al creador del workspace.");
   }
 
-  // 2. Si no es el creador, proceder con la eliminación
+  // Si no es el creador, proceder con la eliminación
   const deleteQuery = `
     DELETE FROM workspace_members
     WHERE workspace_id = $1 AND user_id = $2

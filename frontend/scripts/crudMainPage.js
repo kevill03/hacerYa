@@ -7,7 +7,7 @@ import { renderAdminDashboard } from "./adminDashboard.js";
 //------------------------------------------------------------
 // Declaraciones de los DOS MODALES y sus elementos
 const createModal = document.querySelector(".createWindow"); // Modal de Creación
-const detailsModal = document.querySelector(".detailsWindow"); // Modal de Detalles (SOLO para Proyectos ahora)
+const detailsModal = document.querySelector(".detailsWindow"); // Modal de Detalles
 const overlay = document.querySelector(".overlay");
 const detailsContentArea = document.getElementById("detailsContent"); // Área donde se inyectarán los detalles
 
@@ -25,7 +25,7 @@ const sideBarButtons = document.querySelectorAll(".sideBarBtn");
 const subtitleElement = document.querySelector(".subtitle"); // Título principal (h1)
 const createActionButton = document.getElementById("createNavButton"); // Botón principal de acción superior
 
-// --- ESTADO GLOBAL DE LA APLICACIÓN ---
+//ESTADO GLOBAL DE LA APLICACIÓN
 export let appState = {
   currentWorkspaceId: null, // ID del workspace actualmente visible (null para Proyectos Personales)
   currentWorkspaceName: null, // Nombre para títulos
@@ -35,9 +35,7 @@ export let appState = {
   currentUser: null, // Almacenar datos del usuario logueado
 };
 
-// --- UTILITIES (Modal) ---
-
-// NUEVA FUNCIÓN: Abre modal de Creación/Edición
+// Abre modal de Creación/Edición
 const openEditCreateWindow = function (
   isEditing = false,
   item = null,
@@ -68,7 +66,7 @@ const openEditCreateWindow = function (
   } else {
     appState.editingItem = null; // Asegurar que no estamos en modo edición
 
-    // Configurar para CREACIÓN (basado en la vista actual)
+    // Configurar para CREACIÓN
     let formTitleText = "";
     let inputTitlePlaceholder = "";
     let inputDescPlaceholder = "";
@@ -84,7 +82,6 @@ const openEditCreateWindow = function (
       submitBtnIconSrc = "images/workspacesLogo.png";
       creationType = "workspace";
     } else {
-      // 'mis-proyectos' o 'viewWorkspaceProjects'
       const inWorkspace = appState.currentWorkspaceId !== null;
       formTitleText = inWorkspace
         ? `Crea Un Proyecto en "${appState.currentWorkspaceName}"`
@@ -114,7 +111,6 @@ const openEditCreateWindow = function (
 };
 
 const openDetailsWindow = function () {
-  // Solo para detalles de PROYECTO
   detailsModal.classList.remove("hidden");
   overlay.classList.remove("hidden");
 };
@@ -138,13 +134,8 @@ const changeView = function () {
   );
 };
 
-/**
- * Función para construir el HTML de la tarjeta simplificada (CLICABLE).
- * SIN ESTILOS INLINE. Asume que style.css maneja .project-card, .workspace-card, .card-details
- */
+/**Función para construir el HTML de la tarjeta simplificada (CLICABLE)*/
 const createCardHTML = (item, type) => {
-  // Añadir clase 'clickable' para diferenciar la acción en el listener si es necesario
-  // Aunque e.target.closest('.card-details') ya funciona bien.
   return `
         <div class="${type}-card flexContainer card-details" data-id="${
     item.id
@@ -157,21 +148,17 @@ const createCardHTML = (item, type) => {
     `;
 };
 
-/**
- * Carga y renderiza la vista de Proyectos (Personales o de Workspace).
- * @param {string|null} workspaceId - ID del workspace a filtrar (null para personales).
- * @param {string|null} workspaceName - Nombre del workspace (para el título).
- */
+/**Carga y renderiza la vista de Proyectos (Personales o de Workspace)*/
 const renderProjects = async (workspaceId = null, workspaceName = null) => {
   mainContentArea.innerHTML =
     '<div class="loading-spinner">Cargando Proyectos...</div>';
 
   try {
     // Siempre recargar proyectos al renderizar esta vista
-    const response = await apiRequest("/projects"); // 1. Renombra a 'response'
+    const response = await apiRequest("/projects"); //Renombra a 'response'
     if (!response || !response.data)
       throw new Error("No se pudieron cargar los proyectos.");
-    appState.allProjects = response.data; // 2. Asigna solo la propiedad .data
+    appState.allProjects = response.data; //Asigna solo la propiedad .data
   } catch (error) {
     mainContentArea.innerHTML = `<h2 class="error-message">❌ Error al cargar proyectos: ${error.message}</h2>`;
     return;
@@ -179,8 +166,6 @@ const renderProjects = async (workspaceId = null, workspaceName = null) => {
 
   const isPersonalView = workspaceId === null;
   const currentUserId = appState.currentUser?.id;
-
-  // FILTRADO SEGÚN LÓGICA REQUERIDA
   const filteredProjects = appState.allProjects.filter((p) => {
     if (isPersonalView) {
       // REQUISITO: Solo personales (is_personal: true) Y creados por el usuario logueado
@@ -199,7 +184,7 @@ const renderProjects = async (workspaceId = null, workspaceName = null) => {
     : `${workspaceName} | Proyectos 📋`;
   document.title = `${subtitleElement.textContent} | HacerYA`;
 
-  // Actualizar Botón de Acción Principal (Crear Proyecto) - SIEMPRE ES CREAR PROYECTO
+  // Actualizar Botón de Acción Principal (Crear Proyecto)
   createActionButton.innerHTML = `
         Crear Proyecto
         <img src="images/addImage.png" alt="boton acción" class="actionIcon"/>
@@ -225,9 +210,7 @@ const renderProjects = async (workspaceId = null, workspaceName = null) => {
   }
 };
 
-/**
- * Carga y renderiza la vista de Workspaces.
- */
+/**Carga y renderiza la vista de Workspaces*/
 const renderWorkspaces = async () => {
   mainContentArea.innerHTML =
     '<div class="loading-spinner">Cargando Workspaces...</div>';
@@ -242,7 +225,7 @@ const renderWorkspaces = async () => {
     return;
   }
 
-  // Resetear contexto
+  //Resetear contexto
   appState.currentWorkspaceId = null;
   appState.currentWorkspaceName = null;
   subtitleElement.textContent = "Workspaces";
@@ -270,7 +253,7 @@ const renderWorkspaces = async () => {
   }
 };
 
-// --- Modal de Detalles (AHORA GENERALIZADO) ---
+//Modal de Detalles
 const openDetailsModal = (itemId, itemType) => {
   // Buscar el objeto completo: Buscar en el cache de proyectos o workspaces
   const dataCache =
@@ -278,7 +261,7 @@ const openDetailsModal = (itemId, itemType) => {
   const itemData = dataCache.find((item) => item.id == itemId);
 
   if (!itemData) {
-    // El error ahora mostrará el tipo correcto
+    // El error mostrará el tipo correcto
     console.error(`Error: Datos no encontrados para ${itemType} ID: ${itemId}`);
     return;
   }
@@ -293,13 +276,13 @@ const openDetailsModal = (itemId, itemType) => {
   // Lógica para Proyectos
   const isProjectAdmin = itemData.current_user_role === "admin";
   const canManageProject = isOwner || isProjectAdmin;
-  // 1. Botones de Acción Dinámicos (DEPENDEN DE itemType)
+  //Botones de Acción Dinámicos (DEPENDEN DE itemType)
   let actionButtonsHTML = "";
   let modalTitle = "";
 
   if (itemType === "project") {
     modalTitle = "Detalles del Proyecto 📋";
-    // REQUISITO PROYECTOS: Editar, Eliminar (si es dueño), Ver Tareas
+    // REQUISITO PROYECTOS: Editar y Eliminar solo si es creador o admin, Ver Tareas para ambos niveles de usuario
     actionButtonsHTML = `
             ${
               canManageProject
@@ -323,7 +306,7 @@ const openDetailsModal = (itemId, itemType) => {
         `;
   } else if (itemType === "workspace") {
     modalTitle = "Detalles del Workspace 💼";
-    // REQUISITO WORKSPACES: Editar, Eliminar (si es dueño), Gestionar Miembros (si es dueño y no personal), Ver Proyectos
+    // REQUISITO WORKSPACES: Editar y Eliminar (si es creador o admin), Gestionar Miembros (si es creador o admin y no personal), Ver Proyectos
     actionButtonsHTML = `
             ${
               canManageWorkspace
@@ -347,7 +330,7 @@ const openDetailsModal = (itemId, itemType) => {
         `;
   }
 
-  // 2. Crear el HTML detallado para inyectar en el modal
+  // Crear el HTML detallado para inyectar en el modal
   const detailHTML = `
         <div class="detailsContent">
             <h1>${modalTitle}</h1>
@@ -379,11 +362,11 @@ const openDetailsModal = (itemId, itemType) => {
         </div>
     `;
 
-  // 3. Inyectar y abrir el modal de DETALLES
+  // Inyectar y abrir el modal de DETALLES
   detailsContentArea.innerHTML = detailHTML;
-  openDetailsWindow(); // <-- Asegurarse de que esta línea se ejecute
+  openDetailsWindow();
 };
-// --- Función principal para cambiar la vista y actualizar UI ---
+/**Función principal para cambiar la vista y actualizar UI*/
 const renderView = async (
   viewName,
   workspaceId = null,
@@ -399,31 +382,25 @@ const renderView = async (
     appState.currentWorkspaceName = null;
   }
 
-  // --- INICIO DE LA CORRECCIÓN ---
-  // Resetea el botón "Alternar Vista" para que sea visible por defecto
-  // en las vistas que lo usan (proyectos y workspaces).
-  // Tu lógica de 'createActionButton' ya se maneja dentro de cada función.
+  // Resetea el botón "Alternar Vista" para que sea visible por defecto en las vistas que lo usan
   btnChangeView.forEach((btn) => (btn.style.display = "flex"));
-  // --- FIN DE LA CORRECCIÓN ---
-
   // Ejecutar la función de renderizado correspondiente
   switch (viewName) {
     case "mis-proyectos":
-      await renderProjects(null); // Espera a que termine
+      await renderProjects(null);
       break;
     case "workspaces":
-      await renderWorkspaces(); // Espera a que termine
+      await renderWorkspaces();
       break;
     case "admin-dashboard":
       createActionButton.style.display = "none";
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
       subtitleElement.textContent = "Estadísticas";
       document.title = "Estadísticas | HacerYA";
-      // Llama al nuevo especialista para que construya el dashboard
       await renderAdminDashboard(mainContentArea);
       break;
     case "viewWorkspaceProjects":
-      await renderProjects(workspaceId, workspaceName); // Espera a que termine
+      await renderProjects(workspaceId, workspaceName);
       break;
     case "kanban":
       // Ocultar el botón de "Crear Proyecto/Workspace"
@@ -432,20 +409,17 @@ const renderView = async (
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
       // Si estamos en un workspace, usa su nombre. Si no (proyecto personal), usa "Personal".
       const wsName = appState.currentWorkspaceName || "Personal";
-      const projName = projectName || "Tareas"; // Fallback por si el nombre no llega
+      const projName = projectName || "Tareas";
       console.log(projName);
       subtitleElement.textContent = `${wsName} | ${projName}`;
       document.title = `${subtitleElement.textContent} | HacerYA`;
-      //Forzar que se mantenga con display:flex
       mainContentArea.classList.add("flexContainer");
       mainContentArea.classList.remove("gridContainer");
-      // El director llama al especialista del Kanban
       await renderKanbanBoard(mainContentArea, projectId);
       break;
-    // --- FIN DE LA ADICIÓN ---
     default:
       mainContentArea.innerHTML = "<h2>Vista no encontrada.</h2>";
-      // CORRECCIÓN: Oculta ambos botones si la vista no se encuentra
+      //Oculta ambos botones si la vista no se encuentra
       createActionButton.style.display = "none";
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
   }
@@ -460,8 +434,7 @@ const renderView = async (
   });
 };
 
-// --- BASE EVENT LISTENERS ---
-
+//Listeners
 document
   .querySelector(".createWindow .closeWindow")
   .addEventListener("click", closeAnyWindow);
@@ -482,9 +455,8 @@ btnChangeView.forEach((btn) => {
   btn.addEventListener("click", changeView);
 });
 
-// --- INICIALIZACIÓN Y LISTENERS PRINCIPALES ---
 document.addEventListener("DOMContentLoaded", async () => {
-  // 0. Obtener datos del usuario logueado
+  //Obtener datos del usuario logueado
   const userData = localStorage.getItem("user");
   if (!userData) {
     window.location.href = "login.html";
@@ -503,11 +475,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 1. Carga inicial basada en Hash
+  //Carga inicial basada en Hash
   const initialHash = window.location.hash.replace("#", "");
   let viewToLoad = "mis-proyectos";
   let initialWorkspaceId = null;
-  let initialWorkspaceName = null; // Necesario si cargamos directo
+  let initialWorkspaceName = null;
 
   if (initialHash.startsWith("workspaces/")) {
     const parts = initialHash.split("/");
@@ -515,22 +487,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Intenta cargar directo a los proyectos de un workspace
       initialWorkspaceId = parts[1];
       // Necesitamos cargar los workspaces primero para obtener el nombre
-      await renderView("workspaces"); // Carga y cachea workspaces
+      await renderView("workspaces");
       const workspace = appState.allWorkspaces.find(
         (w) => w.id == initialWorkspaceId
       );
       if (workspace) {
         viewToLoad = "viewWorkspaceProjects";
         initialWorkspaceName = workspace.name;
-        // Llama a renderView AHORA con los datos correctos
         await renderView(viewToLoad, initialWorkspaceId, initialWorkspaceName);
       } else {
         console.warn(
           `Workspace ID ${initialWorkspaceId} no encontrado en hash inicial.`
         );
-        viewToLoad = "workspaces"; // Fallback a la lista de workspaces
-        await renderView(viewToLoad); // Renderiza la lista general
-        window.history.replaceState(null, "", "#workspaces"); // Corregir hash
+        viewToLoad = "workspaces";
+        await renderView(viewToLoad);
+        window.history.replaceState(null, "", "#workspaces");
       }
     } else {
       viewToLoad = "workspaces"; // Cargar lista si el hash es solo #workspaces o inválido
@@ -545,7 +516,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderView(viewToLoad);
   }
 
-  // Corrección de URL inicial si no había hash o era inválido
   if (!initialHash && viewToLoad === "mis-proyectos") {
     window.history.replaceState(null, "", "#mis-proyectos");
   }
@@ -553,36 +523,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Listener para el botón de acción principal (Superior - Crear)
   createActionButton.addEventListener("click", () => {
     // Abre el modal configurado para CREACIÓN
-    openEditCreateWindow(false); // Pasar false para indicar que es creación
+    openEditCreateWindow(false);
   });
 
-  // Listener DELEGADO para clicks en las tarjetas
+  // Listener para clicks en las tarjetas
   mainContentArea.addEventListener("click", async (e) => {
     const card = e.target.closest(".card-details");
     if (card) {
       const itemId = card.getAttribute("data-id");
       const itemType = card.getAttribute("data-type"); // 'project' o 'workspace'
-
-      // CORRECCIÓN: Ahora AMBOS tipos abren el modal de detalles
       if (itemId && itemType) {
-        openDetailsModal(itemId, itemType); // Llamar siempre a la función del modal
+        openDetailsModal(itemId, itemType);
       }
     }
   });
 
-  // Listener DELEGADO para botones DENTRO del modal de DETALLES (AHORA GENERALIZADO)
+  // Listener para botones DENTRO del modal de DETALLES
   detailsModal.addEventListener("click", async (e) => {
     const targetButton = e.target.closest(".panelBtn");
     if (!targetButton) return;
-
     const itemId = targetButton.getAttribute("data-id"); // ID del Proyecto o Workspace
-    // IMPORTANTE: Asegúrate que los botones en openDetailsModal tengan data-type="project" o data-type="workspace"
     const itemType = targetButton.getAttribute("data-type");
 
     if (!itemId)
       return console.error("Botón sin data-id en modal de detalles.");
 
-    // --- Lógica según el botón presionado ---
+    // Lógica según el botón presionado
 
     // Botones Comunes (Editar / Eliminar)
     if (targetButton.classList.contains("btnEdit")) {
@@ -592,15 +558,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         itemType === "project" ? appState.allProjects : appState.allWorkspaces;
       const itemData = dataCache.find((item) => item.id == itemId);
       if (itemData) {
-        closeAnyWindow(); // Cierra modal detalles
+        closeAnyWindow();
         openEditCreateWindow(true, itemData, itemType); // Abre modal creación en modo EDICIÓN
       } else {
         console.error("Datos no encontrados para editar.");
       }
     } else if (targetButton.classList.contains("btnDelete")) {
       if (!itemType) return console.error("Botón Eliminar sin data-type.");
-
-      // --- 1. Obtener los datos (esto es igual que tu código actual) ---
       const itemName =
         targetButton.closest(".detailsContent")?.querySelector("h2")
           ?.textContent ||
@@ -614,7 +578,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const endpoint = `/${itemType}s/${itemId}`;
       Swal.fire({
         title: "¿Estás seguro?",
-        text: confirmMessage, // Usamos tu mensaje dinámico
+        text: confirmMessage,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33",
@@ -622,7 +586,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         confirmButtonText: "Sí, ¡eliminar!",
         cancelButtonText: "Cancelar",
       }).then(async (result) => {
-        // <-- La lógica de la API va DENTRO del .then()
         if (result.isConfirmed) {
           // Si el usuario hizo clic en "Sí, eliminar"
           try {
@@ -638,8 +601,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
             closeAnyWindow();
-
-            // Limpiar cache y recargar vista (tu lógica actual)
             if (itemType === "project") appState.allProjects = [];
             if (itemType === "workspace") appState.allWorkspaces = [];
 
@@ -655,7 +616,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (itemType === "workspace")
               window.history.pushState(null, "", "#workspaces");
           } catch (error) {
-            // Reemplazo del 'alert()' de error
             Swal.fire(
               "Error",
               `Error al eliminar ${itemType}: ${error.message}`,
@@ -664,28 +624,21 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
       });
-      // --- FIN DEL REEMPLAZO ---
-    }
-    // Botones Específicos de Proyecto
-    else if (targetButton.classList.contains("btnViewTasks")) {
+    } else if (targetButton.classList.contains("btnViewTasks")) {
       closeAnyWindow();
       const projectId = itemId;
 
-      // 1. Obtenemos el nombre del proyecto desde el H2 del modal
+      //Obtenemos el nombre del proyecto desde el H2 del modal
       const projectName =
         targetButton.closest(".detailsContent")?.querySelector("h2")
           ?.textContent || "Proyecto";
-
-      // 2. ¡CORRECCIÓN! Pasamos los 5 argumentos a renderView:
       await renderView(
         "kanban",
         appState.currentWorkspaceId, // (El ID del workspace o null si es personal)
         appState.currentWorkspaceName, // (El Nombre del workspace o null)
         projectId,
-        projectName // <-- El nuevo parámetro que acabamos de añadir
+        projectName
       );
-
-      // 3. La lógica del hash se queda aquí
       if (appState.currentWorkspaceId) {
         window.history.pushState(
           null,
@@ -696,12 +649,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.history.pushState(null, "", `#projects/${projectId}/tasks`);
       }
     }
-    // Botón Específico de Proyecto (Gestionar Miembros)
+    // Botón Gestionar Miembros
     else if (targetButton.classList.contains("btnAddProjectMember")) {
       const projectId = itemId;
-      closeAnyWindow(); // Cierra el modal de detalles
+      closeAnyWindow();
 
-      // Llama al nuevo especialista de miembros de PROYECTO
       renderProjectMemberModal(projectId);
     }
     // Botones Específicos de Workspace
@@ -710,13 +662,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       //Cierra el modal de detalles actual
       closeAnyWindow();
-
-      //Llama al "especialista" de miembros (importado de workspaceMembers.js)
-      //    para que cree y muestre el nuevo modal de gestión.
       renderMemberModal(workspaceId);
     } else if (targetButton.classList.contains("btnViewProjects")) {
       const workspaceName = targetButton.getAttribute("data-name");
-      closeAnyWindow(); // Cierra modal detalles
+      closeAnyWindow();
       // Cambia la vista principal a los proyectos de este workspace
       await renderView("viewWorkspaceProjects", itemId, workspaceName);
       window.history.pushState(null, "", `#workspaces/${itemId}/projects`);
@@ -742,7 +691,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     submitCreateBtn.addEventListener("click", async () => {
       const title = inputTitle.value.trim();
       const description = inputDescription.value.trim();
-      const submitAction = submitCreateBtn.getAttribute("data-submit-type"); // 'project', 'workspace', o 'edit'
+      const submitAction = submitCreateBtn.getAttribute("data-submit-type");
 
       if (!title) {
         console.error("Título es requerido.");
@@ -768,10 +717,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (!appState.editingItem) throw new Error("No hay item en edición.");
           const { type, id } = appState.editingItem;
           itemType = type;
-          endpoint = `/${type}s/${id}`; // /projects/:id o /workspaces/:id
+          endpoint = `/${type}s/${id}`;
         } else {
           // MODO CREACIÓN
-          itemType = submitAction; // 'project' or 'workspace'
+          itemType = submitAction;
           if (submitAction === "workspace") {
             endpoint = "/workspaces";
           } else {
@@ -785,10 +734,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const response = await apiRequest(endpoint, method, payload); // 1. Renombra
 
-        closeAnyWindow(); // Cierra el modal de creación/edición
+        closeAnyWindow();
         console.log(
           `${submitAction === "edit" ? "Actualización" : "Creación"} exitosa:`,
-          response.data // 2. Muestra solo response.data en la consola
+          response.data
         );
 
         // Limpiar cache correspondiente
@@ -808,7 +757,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           viewToRefresh = "workspaces"; // Si creamos/editamos workspace
         }
 
-        // Re-renderizar la vista actual
         await renderView(
           viewToRefresh,
           appState.currentWorkspaceId,
@@ -821,10 +769,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           } (${endpoint}):`,
           error
         );
-        alert(`Error: ${error.message}`); // Reemplazar alert
+        alert(`Error: ${error.message}`);
       } finally {
         submitCreateBtn.disabled = false;
-        // El botón se restaurará la próxima vez que se abra el modal
         appState.editingItem = null; // Resetear estado de edición
       }
     });
@@ -842,18 +789,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (parts.length >= 3 && parts[2] === "projects") {
         viewToLoad = "viewWorkspaceProjects";
         workspaceId = parts[1];
-        // Buscar nombre en cache (si no, tendríamos que cargarlo)
+        // Buscar nombre en cache
         const workspace = appState.allWorkspaces.find(
           (w) => w.id == workspaceId
         );
-        workspaceName = workspace ? workspace.name : "Workspace"; // Fallback
+        workspaceName = workspace ? workspace.name : "Workspace";
       } else {
         viewToLoad = "workspaces";
       }
     } else if (["workspaces", "admin-dashboard"].includes(hash)) {
       viewToLoad = hash;
     }
-    // Renderizar la vista correspondiente al hash
     await renderView(viewToLoad, workspaceId, workspaceName);
   });
 });

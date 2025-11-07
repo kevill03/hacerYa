@@ -1,15 +1,13 @@
 import { apiRequest } from "./api.js";
-import { appState } from "./crudMainPage.js"; // Necesitamos el appState para el refresh
+import { appState } from "./crudMainPage.js";
 
 let currentTaskSubmitHandler = null;
 let currentCommentSubmitHandler = null;
-
+/**Funcion Principal para la logica de mostrar el tablero de tareas (kanban board) */
 export async function renderKanbanBoard(container, projectId) {
   try {
     container.innerHTML = `<p>Cargando tareas...</p>`;
-
-    // --- CORRECCIÓN ---
-    // Ahora cargamos Tareas y Miembros en paralelo
+    // Se cargan Tareas y Miembros en paralelo
     const [tasksResponse, membersResponse] = await Promise.all([
       apiRequest(`/projects/${projectId}/tasks`, "GET"),
       apiRequest(`/projects/${projectId}/members`, "GET"),
@@ -17,7 +15,7 @@ export async function renderKanbanBoard(container, projectId) {
 
     const tasks = tasksResponse.data;
     const members = membersResponse.data;
-    // --- FIN DE LA CORRECCIÓN ---
+    //Se estructura el html
     const kanbanHTML = `
       <div class="kanban-container">
         <div class="kanban-column" id="col-por-hacer" data-status="Por hacer">
@@ -62,42 +60,33 @@ export async function renderKanbanBoard(container, projectId) {
   }
 }
 
-// --- 2. FUNCIÓN PARA CREAR TARJETAS (SIN CAMBIOS) ---
-
-// EN: scripts/taskManager.js
-
+/**FUNCIÓN PARA CREAR TARJETAS/*/
 function createTaskCard(task) {
   let dueDateHtml = "";
-  let dueDateClass = ""; // Para el borde
-  let priorityClass = ""; // Para el texto h4
+  let dueDateClass = "";
+  let priorityClass = "";
 
   const isCompleted = task.status === "Hecho";
   const isDraggable = !isCompleted;
   const completedClass = isCompleted ? "is-completed" : ""; // Para el estilo "hecho" (atenuado, tachado)
-
-  // --- INICIO DE LA NUEVA LÓGICA DE FECHAS ---
-
   if (isCompleted) {
-    // --- LÓGICA PARA TAREAS CERRADAS ---
-
-    // Comprobar si tenía fecha de entrega y fecha de finalización
+    // Comprobar si la tarea tenía fecha de entrega y fecha de finalización
     if (task.completed_at && task.due_date) {
       const completedDate = new Date(task.completed_at);
       const dueDate = new Date(task.due_date);
       completedDate.setHours(0, 0, 0, 0);
       dueDate.setHours(0, 0, 0, 0);
 
-      // Comparamos: ¿Se completó *después* de la fecha de entrega?
+      //Se verifica si se completó después de la fecha de entrega
       const diffTime = completedDate.getTime() - dueDate.getTime();
-      // Usamos Math.floor para ser justos (completar el mismo día es 0)
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
       if (diffDays <= 0) {
-        // Se completó a tiempo (el mismo día o antes)
+        //Se verifica si se completó a tiempo (el mismo día o antes)
         dueDateHtml = `<span class="task-due completed-on-time">✅ Finalizada a tiempo</span>`;
       } else {
-        // Se completó tarde
-        dueDateClass = "due-overdue"; // Mantenemos el borde rojo para que se note
+        //Se verifica si se completó tarde
+        dueDateClass = "due-overdue";
         dueDateHtml = `<span class="task-due completed-late">🛑 Finalizada con ${diffDays} ${
           diffDays === 1 ? "día" : "días"
         } de retraso</span>`;
@@ -107,7 +96,7 @@ function createTaskCard(task) {
       dueDateHtml = `<span class="task-due completed-on-time">✅ Finalizada</span>`;
     }
   } else {
-    // --- LÓGICA PARA TAREAS ABIERTAS (Tu código actual) ---
+    //Lógica para tareas abiertas
     if (task.due_date) {
       const today = new Date();
       const dueDate = new Date(task.due_date);
@@ -118,15 +107,15 @@ function createTaskCard(task) {
 
       if (diffDays < 0) {
         const daysAgo = Math.abs(diffDays);
-        dueDateClass = "due-overdue"; // Borde rojo
+        dueDateClass = "due-overdue";
         dueDateHtml = `<span class="task-due overdue">Venció hace ${daysAgo} ${
           daysAgo === 1 ? "día" : "días"
         }</span>`;
       } else if (diffDays === 0) {
-        dueDateClass = "due-today"; // Borde naranja
+        dueDateClass = "due-today";
         dueDateHtml = `<span class="task-due due-today">⚠️ Vence Hoy</span>`;
       } else if (diffDays === 1) {
-        dueDateClass = "due-soon"; // Borde azul
+        dueDateClass = "due-soon";
         dueDateHtml = `<span class="task-due due-soon">Vence Mañana</span>`;
       } else {
         dueDateHtml = `<span class="task-due">Vence en ${diffDays} días</span>`;
@@ -135,7 +124,7 @@ function createTaskCard(task) {
     // Si no tiene due_date y no está completada, no se muestra nada.
   }
 
-  // --- Lógica de Prioridad (sin cambios) ---
+  //Lógica de Prioridad de las tareas
   if (task.priority === "Alta") priorityClass = "priority-alta-text";
   else if (task.priority === "Baja") priorityClass = "priority-baja-text";
 
@@ -156,18 +145,14 @@ function createTaskCard(task) {
   `;
 }
 
-// --- 3. MANEJADORES DE EVENTOS (IMPLEMENTACIÓN COMPLETA) ---
-
 function addKanbanEventListeners(container, projectId, members) {
   const taskLists = container.querySelectorAll(".kanban-tasks-list");
   const cards = container.querySelectorAll(".task-card");
   const addButtons = container.querySelectorAll(".add-task-btn");
 
-  // --- A. Eventos de Drag & Drop ---
-
+  //Eventos de Drag & Drop
   cards.forEach((card) => {
     card.addEventListener("dragstart", (e) => {
-      // (No puedes arrastrar si draggable="false", así que esto ya es seguro)
       e.dataTransfer.setData("text/plain", card.dataset.taskId);
       setTimeout(() => card.classList.add("dragging"), 0);
     });
@@ -175,7 +160,6 @@ function addKanbanEventListeners(container, projectId, members) {
       card.classList.remove("dragging");
     });
   });
-
   taskLists.forEach((list) => {
     list.addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -191,8 +175,6 @@ function addKanbanEventListeners(container, projectId, members) {
       const taskId = e.dataTransfer.getData("text/plain");
       const newStatus = list.dataset.status;
       const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-
-      // --- ¡INICIO DE LA NUEVA LÓGICA DE CONFIRMACIÓN! ---
 
       // Si el nuevo estado es "Hecho", pedimos confirmación
       if (newStatus === "Hecho") {
@@ -210,20 +192,18 @@ function addKanbanEventListeners(container, projectId, members) {
             // Usuario confirmó: Llama a la API y refresca
             await handleTaskDrop(taskId, newStatus, projectId, container);
           } else {
-            // Usuario canceló: Refrescamos el tablero para
-            // devolver la tarjeta a su columna original.
+            // Usuario canceló: Refrescamos el tablero para devolver la tarjeta a su columna original.
             await renderKanbanBoard(container, projectId);
           }
         });
       } else {
-        // Si no es "Hecho" (ej. "En Progreso"), solo llama a la API y refresca
+        // Si no es "Hecho" solo llama a la API y refresca
         await handleTaskDrop(taskId, newStatus, projectId, container);
       }
-      // --- FIN DE LA NUEVA LÓGICA ---
     });
   });
 
-  // --- B. Clic en "Añadir tarea" ---
+  //Clic en "Añadir tarea"
   addButtons.forEach((button) => {
     button.addEventListener("click", (e) => {
       const status = e.target.closest(".kanban-column").dataset.status;
@@ -231,31 +211,29 @@ function addKanbanEventListeners(container, projectId, members) {
     });
   });
 
-  // --- C. Clic en una tarjeta (para Editar) ---
+  // Clic en una tarjeta (para Editar)
   cards.forEach((card) => {
     card.addEventListener("click", (e) => {
       // Prevenir que se abra el modal si estamos arrastrando
       if (e.target.closest(".dragging")) return;
 
       const taskId = e.target.closest(".task-card").dataset.taskId;
-      openTaskModal(taskId, projectId, null, members); // taskId = Modo Edición
+      openTaskModal(taskId, projectId, null, members);
     });
   });
 }
 
-/**
- * Funcion para llamar a la API para actualizar el estado y refresca el tablero completo.
- */
+/**Funcion para llamar a la API para actualizar el estado y refresca el tablero completo.*/
 async function handleTaskDrop(taskId, newStatus, projectId, container) {
   try {
-    // 1. Llama a la API para actualizar el estado
+    //Llama a la API para actualizar el estado
     await apiRequest(`/projects/${projectId}/tasks/${taskId}/status`, "PATCH", {
       status: newStatus,
     });
-    // Refrescamos el tablero completo. Esto:
-    // - Muestra la tarjeta en la nueva columna.
-    // - Vuelve a ejecutar createTaskCard(), aplicando 'draggable="false"'
-    //   y la clase '.is-completed' a la tarjeta que se movió a "Hecho".
+    /*Refrescamos el tablero completo. Esto:
+     - Muestra la tarjeta en la nueva columna.
+     - Vuelve a ejecutar createTaskCard(), aplicando 'draggable="false"'
+      y la clase '.is-completed' a la tarjeta que se movió a "Hecho".*/
     await renderKanbanBoard(container, projectId);
   } catch (error) {
     console.error("Error al mover la tarea:", error);
@@ -264,8 +242,7 @@ async function handleTaskDrop(taskId, newStatus, projectId, container) {
     await renderKanbanBoard(container, projectId);
   }
 }
-//LÓGICA DEL MODAL DE TAREAS(Asume que el HTML del modal está en mainPage.html con id="taskModal")
-
+//Lógica para el modal de tareas(Asume que el HTML del modal está en mainPage.html con id="taskModal")
 const taskModal = document.getElementById("taskModal");
 const taskForm = document.getElementById("taskForm");
 const taskFormTitle = document.getElementById("taskFormTitle");
@@ -275,15 +252,14 @@ const commentsSection = document.querySelector(".task-comments-section");
 const commentsListEl = document.getElementById("taskCommentsList");
 const commentForm = document.getElementById("commentForm");
 const commentInput = document.getElementById("commentInput");
-/**
- * Abre el modal de Tareas, sea para Crear o Editar.
- */
+
+/** Abre el modal de Tareas, sea para Crear o Editar.*/
 async function openTaskModal(taskId, projectId, status, members) {
   const form = taskForm;
   form.reset();
   commentForm.reset();
 
-  // 1. Definir los elementos del formulario
+  //Definición de los elementos del formulario
   const taskTitleInput = document.getElementById("taskTitle");
   const taskDescInput = document.getElementById("taskDescription");
   const taskStatusSelect = document.getElementById("taskStatusSelect");
@@ -299,7 +275,7 @@ async function openTaskModal(taskId, projectId, status, members) {
     taskDueDateInput,
   ];
 
-  // 2. Poblar el <select> de miembros
+  //Se Pobla el <select> de miembros
   taskAssigneeSelect.innerHTML = '<option value="">(Sin asignar)</option>';
   if (members && Array.isArray(members)) {
     members.forEach((member) => {
@@ -311,7 +287,7 @@ async function openTaskModal(taskId, projectId, status, members) {
 
   form.dataset.projectId = projectId;
 
-  // 3. Lógica de Permisos
+  //Lógica de Permisos
   const project = appState.allProjects.find((p) => p.id == projectId);
   const isOwner = project && project.created_by === appState.currentUser.id;
   const member = members.find((m) => m.id === appState.currentUser.id);
@@ -319,7 +295,7 @@ async function openTaskModal(taskId, projectId, status, members) {
   const canManage = isOwner || isProjectAdmin;
 
   if (taskId) {
-    // --- MODO EDICIÓN ---
+    //MODO EDICIÓN
     taskFormTitle.textContent = "Editar Tarea";
     submitTaskBtn.textContent = "Guardar Cambios";
     form.dataset.taskId = taskId;
@@ -333,7 +309,7 @@ async function openTaskModal(taskId, projectId, status, members) {
       const task = taskResponse.data;
       const comments = commentsResponse.data;
 
-      // Rellenar el formulario
+      //Rellenar el formulario
       taskTitleInput.value = task.title;
       taskDescInput.value = task.description || "";
       taskStatusSelect.value = task.status;
@@ -343,12 +319,8 @@ async function openTaskModal(taskId, projectId, status, members) {
 
       populateComments(comments);
       commentsSection.style.display = "block";
-
-      // --- ¡CORRECCIÓN DE LISTENER (A)! ---
-      // Creamos la función y la guardamos en la variable global
       currentCommentSubmitHandler = (e) =>
         handleCommentSubmit(e, projectId, taskId);
-      // La añadimos SIN { once: true }
       commentForm.addEventListener("submit", currentCommentSubmitHandler);
 
       // Lógica de Read-Only
@@ -374,7 +346,7 @@ async function openTaskModal(taskId, projectId, status, members) {
       return;
     }
   } else {
-    // --- MODO CREACIÓN ---
+    //MODO CREACIÓN
     taskFormTitle.textContent = "Crear Nueva Tarea";
     submitTaskBtn.textContent = "Crear Tarea";
     form.dataset.taskId = "";
@@ -387,7 +359,7 @@ async function openTaskModal(taskId, projectId, status, members) {
     }
   }
 
-  // Mostrar el modal
+  //Mostrar el modal
   taskModal.classList.remove("hidden");
   document.querySelector(".overlay").classList.remove("hidden");
   taskModal
@@ -395,21 +367,17 @@ async function openTaskModal(taskId, projectId, status, members) {
     .addEventListener("click", closeTaskModal);
   document.querySelector(".overlay").addEventListener("click", closeTaskModal);
 
-  // Creamos y guardamos el listener de detalles de tarea
   currentTaskSubmitHandler = (e) => handleTaskFormSubmit(e);
   form.addEventListener("submit", currentTaskSubmitHandler);
   deleteBtn.addEventListener("click", handleDeleteTask, { once: true });
 }
 
-/**
- * Cierra y resetea el modal de tareas.
- */
+/**Cierra y resetea el modal de tareas*/
 function closeTaskModal() {
   taskModal.classList.add("hidden");
   document.querySelector(".overlay").classList.add("hidden");
 
-  // --- ¡CORRECCIÓN DE LIMPIEZA! ---
-  // 1. Limpiamos los listeners de cierre
+  //Se limpian los listeners de cierre
   taskModal
     .querySelector(".closeWindow")
     .removeEventListener("click", closeTaskModal);
@@ -417,37 +385,33 @@ function closeTaskModal() {
     .querySelector(".overlay")
     .removeEventListener("click", closeTaskModal);
 
-  // 2. Limpiamos el listener del formulario de TAREAS (si existe)
+  //Se limpia el listener del formulario de TAREAS (si existe)
   if (currentTaskSubmitHandler) {
     taskForm.removeEventListener("submit", currentTaskSubmitHandler);
     currentTaskSubmitHandler = null; // Limpiamos la variable
   }
 
-  // 3. Limpiamos el listener del formulario de COMENTARIOS (si existe)
+  //Se Limpia el listener del formulario de COMENTARIOS (si existe)
   if (currentCommentSubmitHandler) {
     commentForm.removeEventListener("submit", currentCommentSubmitHandler);
-    currentCommentSubmitHandler = null; // Limpiamos la variable
+    currentCommentSubmitHandler = null;
   }
 }
 
-/**
- * Maneja el envío (submit) del formulario de Tarea (Crear o Editar).
- */
+/**Maneja el envío (submit) del formulario de Tarea (Crear o Editar)*/
 async function handleTaskFormSubmit(e) {
   e.preventDefault();
 
-  // Obtener IDs
   const projectId = e.target.dataset.projectId;
   const taskId = e.target.dataset.taskId;
 
-  // Determinar si es CREAR (POST) o EDITAR (PUT)
+  // Determina si es CREAR (POST) o EDITAR (PUT)
   const isEditing = !!taskId;
   const method = isEditing ? "PUT" : "POST";
   const endpoint = isEditing
     ? `/projects/${projectId}/tasks/${taskId}`
     : `/projects/${projectId}/tasks`;
 
-  // Construir el payload
   const payload = {
     title: document.getElementById("taskTitle").value,
     description: document.getElementById("taskDescription").value,
@@ -457,8 +421,7 @@ async function handleTaskFormSubmit(e) {
     due_date: document.getElementById("taskDueDate").value || null, // Enviar null si está vacío
   };
 
-  // En modo CREAR, el project_id va en el payload (ya lo hace el backend)
-  // En modo EDITAR, no es necesario.
+  // En modo CREAR, el project_id va en el payload (ya lo hace el backend) y En modo EDITAR, no es necesario.
 
   try {
     await apiRequest(endpoint, method, payload);
@@ -471,7 +434,7 @@ async function handleTaskFormSubmit(e) {
 
     closeTaskModal();
 
-    // --- ¡IMPORTANTE! Refrescar el Kanban para ver el cambio ---
+    //Se Refresca el Kanban para ver el cambio ---
     const mainContainer = document.querySelector(".mainData");
     // Volvemos a llamar a renderKanbanBoard para recargar todo
     await renderKanbanBoard(mainContainer, projectId);
@@ -485,9 +448,7 @@ async function handleTaskFormSubmit(e) {
   }
 }
 
-/**
- * Maneja el clic en el botón "Eliminar Tarea".
- */
+/**Maneja el clic en el botón "Eliminar Tarea".*/
 async function handleDeleteTask(e) {
   e.preventDefault(); // Prevenir cualquier acción de formulario
 
@@ -503,7 +464,6 @@ async function handleDeleteTask(e) {
     return;
   }
 
-  // 1. Confirmar con SweetAlert
   Swal.fire({
     title: "¿Estás seguro?",
     text: "¡No podrás revertir esto!",
@@ -515,7 +475,7 @@ async function handleDeleteTask(e) {
     cancelButtonText: "Cancelar",
   }).then(async (result) => {
     if (result.isConfirmed) {
-      // 2. Si se confirma, llamar a la API
+      //Si se confirma, llamar a la API
       try {
         await apiRequest(`/projects/${projectId}/tasks/${taskId}`, "DELETE");
 
@@ -523,7 +483,7 @@ async function handleDeleteTask(e) {
 
         closeTaskModal();
 
-        // 3. Refrescar el Kanban
+        //Refrescar el Kanban
         const mainContainer = document.querySelector(".mainData");
         await renderKanbanBoard(mainContainer, projectId);
       } catch (error) {
@@ -537,9 +497,7 @@ async function handleDeleteTask(e) {
     }
   });
 }
-/**
- * Renderiza la lista de comentarios en el HTML.
- */
+/**Renderiza la lista de comentarios en el HTML*/
 function populateComments(comments) {
   if (!comments || comments.length === 0) {
     commentsListEl.innerHTML =
@@ -560,25 +518,21 @@ function populateComments(comments) {
   `
     )
     .join("");
-
-  // Hacer scroll al último comentario
   commentsListEl.scrollTop = commentsListEl.scrollHeight;
 }
 
-/**
- * Maneja el envío del formulario de nuevo comentario.
- */
+/**Maneja el envío del formulario de nuevo comentario*/
 async function handleCommentSubmit(e, projectId, taskId) {
   e.preventDefault();
   const content = commentInput.value.trim();
   if (!content) return;
 
-  // Deshabilitar el formulario para evitar envíos duplicados
+  //Deshabilitar el formulario para evitar envíos duplicados
   commentInput.disabled = true;
   commentForm.querySelector('button[type="submit"]').disabled = true;
 
   try {
-    // 1. Enviar el nuevo comentario a la API
+    // Enviar el nuevo comentario a la API
     const response = await apiRequest(
       `/projects/${projectId}/tasks/${taskId}/comments`,
       "POST",
@@ -586,7 +540,7 @@ async function handleCommentSubmit(e, projectId, taskId) {
     );
     const newComment = response.data; // La API devuelve el comentario con el nombre
 
-    // 2. Añadir el nuevo comentario al DOM (sin recargar todo)
+    //Añadir el nuevo comentario al DOM (sin recargar todo)
     const commentHTML = `
       <div class="comment-item">
         <strong class="comment-author">${newComment.author_name}</strong>
@@ -596,7 +550,6 @@ async function handleCommentSubmit(e, projectId, taskId) {
         ).toLocaleString()}</small>
       </div>
     `;
-
     // Limpiar el "No hay comentarios" si es el primero
     const noCommentsMsg = commentsListEl.querySelector(".no-comments-msg");
     if (noCommentsMsg) {
@@ -605,8 +558,6 @@ async function handleCommentSubmit(e, projectId, taskId) {
 
     commentsListEl.innerHTML += commentHTML;
     commentInput.value = ""; // Limpiar el input
-
-    // Hacer scroll al nuevo comentario
     commentsListEl.scrollTop = commentsListEl.scrollHeight;
   } catch (error) {
     console.error("Error al publicar comentario:", error);

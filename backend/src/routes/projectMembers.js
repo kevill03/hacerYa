@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { pool } from "../db.js";
 import * as ProjectModel from "../../models/project.js";
-import * as WorkspaceModel from "../../models/workspace.js"; // Para buscar usuarios
+import * as WorkspaceModel from "../../models/workspace.js";
 import { verifyToken } from "../middleware/auth.js";
 
 const router = Router({ mergeParams: true });
 router.use(verifyToken);
 
-// --- Helper para logs ---
+//Funcion especifica para los logs
 async function getLogDetails(projectId, actorId, memberId) {
   try {
     const [projectRes, actorRes, memberRes] = await Promise.all([
@@ -78,7 +78,7 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // 1. Validar permisos del Actor (¿Puede el actor añadir miembros?)
+    // Validar permisos del Actor
     const hasPermission = await ProjectModel.isProjectAdminOrCreator(
       projectId,
       actorId
@@ -90,7 +90,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // 2. Obtener datos del miembro a añadir
+    // Obtener datos del miembro a añadir
     const member = await WorkspaceModel.getUserIdByEmail(memberEmail);
     if (!member) {
       return res
@@ -99,14 +99,14 @@ router.post("/", async (req, res) => {
     }
     const memberId = member.id;
 
-    // 3. Obtener datos del proyecto (para logs y validaciones)
+    //Obtener datos del proyecto (para logs y validaciones)
     const { projectName, actorName, isPersonal } = await getLogDetails(
       projectId,
       actorId,
       null
     );
 
-    // 4. Validar si es proyecto personal
+    //Validar si es proyecto personal
     if (isPersonal) {
       return res.status(403).json({
         message: "No se pueden añadir miembros a un proyecto personal.",
@@ -130,9 +130,8 @@ router.post("/", async (req, res) => {
         message: `El usuario ${memberEmail} no es miembro del workspace padre. Añádelo al workspace primero.`,
       });
     }
-    // --- FIN DE LA VALIDACIÓN ---
 
-    // 6. Ejecutar la adición
+    // Ejecutar la adición
     const result = await ProjectModel.addMemberToProject(
       projectId,
       memberId,

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyToken } from "../middleware/auth.js";
 import * as CommentModel from "../../models/comments.js";
-import * as ProjectModel from "../../models/project.js"; // Para el helper de permisos
+import * as ProjectModel from "../../models/project.js";
 import { pool } from "../db.js"; // Para buscar el proyecto de la tarea
 
 //mergeParams: true permite a este router acceder a /projects/:id/tasks/:taskId
@@ -10,14 +10,13 @@ const router = Router({ mergeParams: true });
 // Proteger todas las rutas de comentarios
 router.use(verifyToken);
 
-// --- Helper rápido para verificar permisos ---
-// (Verifica que el usuario sea miembro del proyecto al que pertenece la tarea)
+// Funcion que Verifica que el usuario sea miembro del proyecto al que pertenece la tarea
 const checkPermission = async (req, res, next) => {
   try {
     const { taskId } = req.params;
     const actorId = req.userId;
 
-    // 1. Encontrar a qué proyecto pertenece la tarea
+    //Encontrar a qué proyecto pertenece la tarea
     const taskRes = await pool.query(
       "SELECT project_id FROM tasks WHERE id = $1",
       [taskId]
@@ -27,8 +26,7 @@ const checkPermission = async (req, res, next) => {
     }
     const { project_id } = taskRes.rows[0];
 
-    // 2. Verificar si el usuario es miembro de ese proyecto
-    // (Usamos la función que ya existe en models/project.js)
+    // Verificar si el usuario es miembro de ese proyecto
     const isMember = await ProjectModel.isProjectMember(project_id, actorId);
 
     if (!isMember) {
@@ -36,7 +34,6 @@ const checkPermission = async (req, res, next) => {
         .status(403)
         .json({ message: "Acceso denegado a los comentarios de esta tarea." });
     }
-
     // Si tiene permiso, guardamos el project_id para los logs y continuamos
     req.projectId = project_id;
     next();

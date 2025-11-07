@@ -1,28 +1,25 @@
 import { apiRequest } from "./api.js";
 import { appState } from "./crudMainPage.js";
 
-// --- Variables del Módulo ---
 let currentProjectId = null;
 let currentProjectName = ""; // Para los títulos
 const overlay = document.querySelector(".overlay");
 let membersModal = null; // Guardará la referencia al modal
 
-/**
- * Función principal: Crea el modal, lo muestra y carga los datos.
- */
+/**Función principal: Crea el modal, lo muestra y carga los datos*/
 export async function renderProjectMemberModal(projectId) {
   currentProjectId = projectId;
 
   try {
-    // 1. Obtener datos del proyecto para el título
+    //Obtener datos del proyecto para el título
     const project = appState.allProjects.find((p) => p.id == projectId);
     if (!project) throw new Error("Proyecto no encontrado en caché.");
     currentProjectName = project.name;
 
-    // 2. Crear y mostrar el esqueleto del modal
+    //Crear y mostrar el esqueleto del modal
     createModalSkeleton(currentProjectName);
 
-    // 3. Cargar la lista de miembros
+    //Cargar la lista de miembros
     await populateMembersList();
   } catch (error) {
     console.error("Error al renderizar modal de miembros de proyecto:", error);
@@ -34,9 +31,7 @@ export async function renderProjectMemberModal(projectId) {
   }
 }
 
-/**
- * Crea el HTML del modal y lo añade al DOM.
- */
+/**Crea el HTML del modal y lo añade al DOM*/
 function createModalSkeleton(projectName) {
   if (document.getElementById("projectMembersModal")) return;
 
@@ -85,9 +80,7 @@ function createModalSkeleton(projectName) {
     .addEventListener("click", handleListClick);
 }
 
-/**
- * Cierra el modal y lo elimina del DOM.
- */
+/**Cierra el modal y lo elimina del DOM*/
 function closeMemberModal() {
   if (membersModal) {
     membersModal.remove();
@@ -97,16 +90,14 @@ function closeMemberModal() {
   overlay.removeEventListener("click", closeMemberModal);
 }
 
-/**
- * Busca los miembros del proyecto y los renderiza.
- */
+/**Busca los miembros del proyecto y los renderiza*/
 async function populateMembersList() {
   const listElement = membersModal.querySelector("#projectMembersList");
   listElement.innerHTML = "<li>Cargando miembros...</li>";
 
   try {
     const response = await apiRequest(
-      `/projects/${currentProjectId}/members`, // <-- RUTA DE API
+      `/projects/${currentProjectId}/members`,
       "GET"
     );
     const members = response.data;
@@ -125,14 +116,9 @@ async function populateMembersList() {
   }
 }
 
-/**
- * Genera el HTML para un solo miembro.
- */
+/**Genera el HTML para un solo miembro.*/
 function createMemberHTML(member) {
   const isCurrentUser = member.id === appState.currentUser.id;
-  // TODO: Lógica para 'isOwner' (el creador del proyecto)
-  // const isOwner = false;
-
   return `
     <li class="member-item" data-member-id="${member.id}">
       <div class="member-info">
@@ -144,10 +130,10 @@ function createMemberHTML(member) {
     isCurrentUser ? "disabled" : ""
   }>
           <option value="member" ${
-            member.role_in_project === "member" ? "selected" : "" // <-- LÓGICA DE PROYECTO
+            member.role_in_project === "member" ? "selected" : ""
           }>Miembro</option>
           <option value="admin" ${
-            member.role_in_project === "admin" ? "selected" : "" // <-- LÓGICA DE PROYECTO
+            member.role_in_project === "admin" ? "selected" : ""
           }>Admin</option>
         </select>
         <button class="btn-delete-member" data-member-id="${member.id}" ${
@@ -162,9 +148,7 @@ function createMemberHTML(member) {
 
 // --- Manejadores de Eventos CRUD ---
 
-/**
- * Maneja el envío del formulario "Añadir Miembro".
- */
+/** Maneja el envío del formulario "Añadir Miembro"*/
 async function handleAddMember(e) {
   e.preventDefault();
   const emailInput = membersModal.querySelector("#projectMemberEmailInput");
@@ -176,7 +160,7 @@ async function handleAddMember(e) {
 
   try {
     const response = await apiRequest(
-      `/projects/${currentProjectId}/members`, // <-- RUTA DE API
+      `/projects/${currentProjectId}/members`,
       "POST",
       { memberEmail: email, role: role }
     );
@@ -195,16 +179,13 @@ async function handleAddMember(e) {
   }
 }
 
-/**
- * Maneja los clics en la lista (Cambiar Rol o Eliminar).
- */
+/**Maneja los clics en la lista (Cambiar Rol o Eliminar)*/
 async function handleListClick(e) {
   const target = e.target;
 
-  // --- Caso 1: Clic en el botón de Eliminar ---
+  //Clic en el botón de Eliminar
   if (target.classList.contains("btn-delete-member")) {
     const memberId = target.dataset.memberId;
-
     Swal.fire({
       title: "¿Estás seguro?",
       text: "¡No podrás revertir esto!",
@@ -218,7 +199,7 @@ async function handleListClick(e) {
       if (result.isConfirmed) {
         try {
           await apiRequest(
-            `/projects/${currentProjectId}/members/${memberId}`, // <-- RUTA DE API
+            `/projects/${currentProjectId}/members/${memberId}`,
             "DELETE"
           );
           Swal.fire("¡Eliminado!", "El miembro ha sido eliminado.", "success");
@@ -231,7 +212,7 @@ async function handleListClick(e) {
     });
   }
 
-  // --- Caso 2: Clic en el <select> de Rol ---
+  //Clic en el <select> de Rol
   if (target.classList.contains("role-select")) {
     target.addEventListener("change", async (event) => {
       const memberId = event.target.dataset.memberId;
@@ -239,7 +220,7 @@ async function handleListClick(e) {
 
       try {
         await apiRequest(
-          `/projects/${currentProjectId}/members/${memberId}`, // <-- RUTA DE API
+          `/projects/${currentProjectId}/members/${memberId}`,
           "PUT",
           { role: newRole }
         );

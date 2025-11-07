@@ -1,4 +1,4 @@
-import { pool } from "../src/db.js"; // Ajusta la ruta a tu db.js
+import { pool } from "../src/db.js";
 
 export async function getGlobalActivityLog(limit = 100) {
   const query = `

@@ -4,7 +4,7 @@ import * as StatsModel from "../../models/statistics.js";
 
 const router = Router();
 
-// ¡CLAVE! Aplicamos ambos middlewares a TODAS las rutas en este archivo.
+//En este fichero al ser adminsitrativo Aplicamos ambos middlewares a TODAS las rutas en este archivo.
 // Nadie que no sea admin podrá acceder a /api/admin/*
 router.use(verifyToken, adminOnly);
 

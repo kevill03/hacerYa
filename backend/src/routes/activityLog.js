@@ -1,17 +1,14 @@
 import { Router } from "express";
-// Importamos TUS middlewares existentes
-import { verifyToken, adminOnly } from "../middleware/auth.js"; // Ajusta la ruta a tu auth.js
-import * as ActivityLogModel from "../../models/activityLog.js"; // Ajusta la ruta
+import { verifyToken, adminOnly } from "../middleware/auth.js";
+import * as ActivityLogModel from "../../models/activityLog.js";
 
 const router = Router();
 
 // ----------------------------------------------------------------------
 // RUTA: OBTENER BITÁCORA GLOBAL (GET /activity-log)
 // ----------------------------------------------------------------------
-// Usamos tu cadena de middlewares:
 // 1. verifyToken (autentica al usuario)
 // 2. adminOnly (autoriza SÓLO si es admin)
-//
 router.get("/", [verifyToken, adminOnly], async (req, res) => {
   try {
     const logs = await ActivityLogModel.getGlobalActivityLog();

@@ -1,16 +1,7 @@
-import { pool } from "../src/db.js"; // CORRECCIÓN CLAVE: La ruta ahora es '../src/db.js'
-import { logAction } from "../src/utils/logAction.js"; // AÑADIDO: Importar la utilidad de bitácora
+import { pool } from "../src/db.js";
+import { logAction } from "../src/utils/logAction.js";
 
-/**
- * Módulo para interactuar con la tabla 'projects' y sus relaciones.
- * Este modelo asume que se recibe el userId para comprobaciones de permisos y listado.
- */
-
-// --- Helpers de Proyectos ---
-
-/**
- * Añade un miembro a un proyecto. Utilizado internamente por createProject.
- */
+/**Añade un miembro a un proyecto. Utilizado internamente por createProject*/
 async function internalAddMemberToProject(projectId, userId, role = "member") {
   const query = `
         INSERT INTO project_members (project_id, user_id, role_in_project)
@@ -21,9 +12,7 @@ async function internalAddMemberToProject(projectId, userId, role = "member") {
   await pool.query(query, values);
 }
 
-/**
- * Verifica si el usuario es miembro del workspace dado.
- */
+/**Verifica si el usuario es miembro del workspace dado*/
 export async function isMemberOfWorkspace(workspaceId, userId) {
   const query = `
         SELECT id FROM workspace_members 
@@ -32,10 +21,7 @@ export async function isMemberOfWorkspace(workspaceId, userId) {
   const result = await pool.query(query, [workspaceId, userId]);
   return result.rowCount > 0;
 }
-/**
- * Verifica si un usuario es miembro O EL CREADOR de un proyecto.
- * (Importante para proyectos personales y para lógica de visualización)
- */
+/**Verifica si un usuario es miembro O EL CREADOR de un proyecto*/
 export async function isProjectMember(projectId, userId) {
   // 1. Comprueba si es miembro
   const memberQuery = `
@@ -56,10 +42,7 @@ export async function isProjectMember(projectId, userId) {
   return false;
 }
 
-/**
- * Verifica si el usuario es el creador del proyecto O un administrador ('admin') del proyecto.
- * (Importante para permisos de añadir/eliminar miembros)
- */
+/**Verifica si el usuario es el creador del proyecto O un administrador ('admin') del proyecto*/
 export async function isProjectAdminOrCreator(projectId, userId) {
   // 1. Verificar si es el creador
   const isCreatorQuery = `
@@ -76,13 +59,8 @@ export async function isProjectAdminOrCreator(projectId, userId) {
   const isAdmin = await pool.query(isAdminQuery, [projectId, userId]);
   return isAdmin.rowCount > 0;
 }
-// --- Lógica CRUD ---
 
-/**
- * Obtiene todos los proyectos donde el usuario es el creador o un miembro.
- * @param {string} userId - ID del usuario autenticado.
- * @returns {Promise<Array>} - Lista de proyectos, incluyendo el nombre del creador.
- */
+/**Obtiene todos los proyectos donde el usuario es el creador o un miembro*/
 export async function getAllProjectsByUserId(userId) {
   const query = `
         SELECT DISTINCT 
@@ -100,12 +78,7 @@ export async function getAllProjectsByUserId(userId) {
   return rows;
 }
 
-/**
- * Obtiene un proyecto específico por ID, solo si el usuario tiene acceso (creador o miembro).
- * @param {string} projectId - ID del proyecto.
- * @param {string} userId - ID del usuario autenticado.
- * @returns {Promise<Object|null>} - El objeto proyecto o null.
- */
+/**Obtiene un proyecto específico por ID, solo si el usuario tiene acceso (creador o miembro)*/
 export async function getProjectById(projectId, userId) {
   const query = `
         SELECT DISTINCT p.*, u.full_name AS created_by_name
@@ -119,11 +92,7 @@ export async function getProjectById(projectId, userId) {
   return rows[0] || null;
 }
 
-/**
- * Crea un nuevo proyecto y automáticamente establece al usuario como creador.
- * @param {Object} projectData - Datos del proyecto (name, description, workspace_id, created_by, is_personal).
- * @returns {Promise<Object>} - El proyecto recién creado.
- */
+/**Crea un nuevo proyecto y automáticamente establece al usuario como creador*/
 export async function createProject({
   name,
   description,
@@ -174,13 +143,7 @@ export async function createProject({
   return newProject;
 }
 
-/**
- * Actualiza los datos de un proyecto si el usuario tiene permisos (es el creador).
- * @param {string} projectId - ID del proyecto a actualizar.
- * @param {Object} data - Datos a actualizar (name, description, etc.).
- * @param {string} userId - ID del usuario que realiza la actualización (para chequeo de permisos).
- * @returns {Promise<Object>} - Resultado de la consulta (rowCount).
- */
+/**Actualiza los datos de un proyecto si el usuario tiene permisos (es el creador)*/
 export async function updateProject(projectId, data, userId) {
   // Lógica para construir la query SET dinámicamente
   const fields = [];
@@ -208,12 +171,11 @@ export async function updateProject(projectId, data, userId) {
 
   // Añadir el ID del proyecto y el ID del creador para el WHERE final.
   values.push(projectId);
-  // El $index ahora apunta a la posición del projectId (el primero después de los campos dinámicos)
+  // El $index apunta a la posición del projectId (el primero después de los campos dinámicos)
   const projectIdIndex = index++;
   values.push(userId);
   const userIdIndex = index;
 
-  // MODIFICACIÓN CLAVE: RETURNING * para obtener el nombre para el log
   const query = `
         UPDATE projects
         SET ${fields.join(", ")}
@@ -229,8 +191,7 @@ export async function updateProject(projectId, data, userId) {
     logAction({
       userId: userId,
       projectId: updatedProject.id,
-      workspaceId: updatedProject.workspace_id, // Usar el workspace_id del objeto devuelto
-      // AÑADIDO EL NOMBRE DEL PROYECTO AL LOG
+      workspaceId: updatedProject.workspace_id,
       action: `UPDATED_PROJECT_DETAILS: ${updatedProject.name}`,
     });
   }
@@ -238,15 +199,9 @@ export async function updateProject(projectId, data, userId) {
   return result;
 }
 
-/**
- * Elimina un proyecto si el usuario es el creador.
- * @param {string} projectId - ID del proyecto a eliminar.
- * @param {string} userId - ID del usuario que intenta eliminar (para chequeo de permisos).
- * @returns {Promise<Object>} - Resultado de la consulta (rowCount).
- */
+/**Elimina un proyecto si el usuario es el creador*/
 export async function deleteProject(projectId, userId) {
   // Verificamos y eliminamos en una sola query. Solo el creador puede eliminar.
-  // MODIFICACIÓN CLAVE: RETURNING name Y workspace_id para el log
   const query = `
         DELETE FROM projects
         WHERE id = $1 AND created_by = $2
@@ -271,14 +226,8 @@ export async function deleteProject(projectId, userId) {
 
   return result;
 }
-// ====================================================================
-// --- NUEVAS FUNCIONES PARA EL CRUD DE MIEMBROS DE PROYECTO ---
-// ====================================================================
 
-/**
- * Obtiene la lista de miembros de un proyecto.
- * Solo si el 'actorId' tiene permiso para ver.
- */
+/**Obtiene la lista de miembros de un proyecto Solo si el 'actorId' tiene permiso para ver*/
 export async function getMembersByProjectId(projectId, actorId) {
   // 1. Verificar si el 'actorId' (quien pregunta) tiene permiso para ver
   if (!(await isProjectMember(projectId, actorId))) {
@@ -297,9 +246,7 @@ export async function getMembersByProjectId(projectId, actorId) {
   return rows;
 }
 
-/**
- * Añade un miembro a un proyecto. (Versión PÚBLICA para la API)
- */
+/**Añade un miembro a un proyecto. (Versión PÚBLICA para la API)*/
 export async function addMemberToProject(
   projectId,
   userId,
@@ -330,9 +277,7 @@ export async function addMemberToProject(
   return result;
 }
 
-/**
- * Actualiza el rol de un miembro en un proyecto.
- */
+/**Actualiza el rol de un miembro en un proyecto*/
 export async function updateMemberRoleInProject(
   projectId,
   memberId,
@@ -362,10 +307,7 @@ export async function updateMemberRoleInProject(
   return result;
 }
 
-/**
- * Elimina un miembro de un proyecto.
- * No permite eliminar al creador del proyecto.
- */
+/** Elimina un miembro de un proyecto*/
 export async function removeMemberFromProject(
   projectId,
   memberIdToRemove,

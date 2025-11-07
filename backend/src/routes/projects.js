@@ -8,8 +8,6 @@ const router = Router();
 // Middleware de autenticación: Aplica protección a todas las rutas de proyectos
 router.use(verifyToken);
 
-// --- RUTAS DE PROYECTOS PROTEGIDAS ---
-
 // GET /api/projects
 // Obtener todos los proyectos del usuario (personales + donde es miembro)
 router.get("/", async (req, res) => {
@@ -87,7 +85,7 @@ router.put("/:id", async (req, res) => {
     const updatedProject = await ProjectModel.updateProject(id, data, userId);
 
     if (updatedProject.rowCount === 0) {
-      // El proyecto no existe, o el usuario no tiene permisos (es importante la lógica del modelo)
+      // El proyecto no existe, o el usuario no tiene permisos
       return res.status(404).json({
         message:
           "Proyecto no encontrado o no tienes permiso para actualizarlo.",

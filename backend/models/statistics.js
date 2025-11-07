@@ -1,8 +1,6 @@
 import { pool } from "../src/db.js";
 
-/**
- * Obtiene los KPIs (Key Performance Indicators) principales.
- */
+/** Obtiene los KPIs principales*/
 export async function getDashboardKPIs() {
   // Ejecutamos múltiples conteos simples en paralelo
   const userCountPromise = pool.query("SELECT COUNT(id) FROM users");
@@ -27,9 +25,7 @@ export async function getDashboardKPIs() {
   };
 }
 
-/**
- * Obtiene el conteo de tareas agrupadas por su estado (para un gráfico de dona).
- */
+/**Obtiene el conteo de tareas agrupadas por su estado (para un gráfico de dona)*/
 export async function getTasksByStatus() {
   const query = `
     SELECT status, COUNT(id) AS count
@@ -42,9 +38,7 @@ export async function getTasksByStatus() {
   return rows; // Devuelve ej: [{status: 'Hecho', count: '5'}, {status: 'En progreso', count: '2'}]
 }
 
-/**
- * Obtiene el conteo de tareas por proyecto (para un gráfico de barras).
- */
+/**Obtiene el conteo de tareas por proyecto (para un gráfico de barras)*/
 export async function getTasksPerProject(limit = 10) {
   const query = `
     SELECT 
@@ -61,9 +55,7 @@ export async function getTasksPerProject(limit = 10) {
   return rows; // Devuelve ej: [{name: 'Campaña Black Friday', task_count: '8'}, ...]
 }
 
-/**
- * Obtiene los usuarios más activos (basado en la bitácora).
- */
+/**Obtiene los usuarios más activos (basado en la bitácora)*/
 export async function getActiveUsers(limit = 5) {
   const query = `
     SELECT 

@@ -92,8 +92,8 @@ router.get("/:taskId", async (req, res) => {
 // ----------------------------------------------------------------------
 // RUTA 4: ACTUALIZAR ESTADO DE TAREA (KANBAN) (PATCH /projects/:id/tasks/:taskId/status)
 // ----------------------------------------------------------------------
-// Usamos PATCH y una ruta específica '/status' porque es una actualización parcial
-// y muy específica para el Kanban.
+/*Se usa PATCH y una ruta específica '/status' porque es una actualización parcial
+ y muy específica para el Kanban*/
 router.patch("/:taskId/status", async (req, res) => {
   const { taskId } = req.params;
   const { status } = req.body;
@@ -103,7 +103,7 @@ router.patch("/:taskId/status", async (req, res) => {
     return res.status(400).json({ message: "El 'status' es obligatorio." });
   }
 
-  // Opcional: Validar que el status sea uno de los permitidos
+  //Validar que el status sea uno de los permitidos
   const allowedStatus = ["Por hacer", "En progreso", "En revisión", "Hecho"];
   if (!allowedStatus.includes(status)) {
     return res
@@ -130,16 +130,16 @@ router.patch("/:taskId/status", async (req, res) => {
 // ----------------------------------------------------------------------
 // RUTA 5: ACTUALIZAR DETALLES DE TAREA (PUT /projects/:id/tasks/:taskId)
 // ----------------------------------------------------------------------
-// Usamos PUT para la actualización general de la tarea (título, desc, etc.)
+//Se usa PUT para la actualización general de la tarea (título, desc, etc.)
 router.put("/:taskId", async (req, res) => {
   const { taskId } = req.params;
   const dataToUpdate = req.body;
   const actorId = req.userId;
   const { id: projectId } = req.params;
   try {
-    // 1. Verificamos si el usuario está intentando cambiar la fecha de entrega
+    // Verificamos si el usuario está intentando cambiar la fecha de entrega
     if (dataToUpdate.due_date !== undefined) {
-      // 2. Si es así, verificamos si tiene rol de 'admin' en el proyecto
+      // Si es así, verificamos si tiene rol de 'admin' en el proyecto
       // (Usamos la función que ya existe en models/project.js)
       const hasPermission = await ProjectModel.isProjectAdminOrCreator(
         projectId,
@@ -153,11 +153,8 @@ router.put("/:taskId", async (req, res) => {
         });
       }
     }
-    // --- FIN DE LA LÓGICA DE PERMISOS ---
-
-    // 3. Si pasó el chequeo (o no estaba cambiando la fecha),
-    //    llamamos a la función normal del modelo.
-    //    (TaskModel.updateTask ya verifica que el usuario sea al menos 'miembro')
+    /*Si pasó el chequeo (o no estaba cambiando la fecha)llamamos a la función normal del modelo.
+    (TaskModel.updateTask ya verifica que el usuario sea al menos 'miembro')*/
     const updatedTask = await TaskModel.updateTask(
       taskId,
       dataToUpdate,

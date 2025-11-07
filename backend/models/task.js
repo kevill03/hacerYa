@@ -1,16 +1,10 @@
 import { pool } from "../src/db.js";
 import { logAction } from "../src/utils/logAction.js";
 import { isProjectAdminOrCreator } from "./project.js";
-// --- HELPERS DE PERMISOS ---
 
-/**
- * Verifica si un usuario es miembro O EL CREADOR de un proyecto.
- * @param {string} projectId - El ID del proyecto.
- * @param {string} userId - El ID del usuario.
- * @returns {boolean} - True si tiene acceso, false si no.
- */
+/**Verifica si un usuario es miembro O EL CREADOR de un proyecto*/
 async function isProjectMember(projectId, userId) {
-  // 1. Comprueba si es miembro a través de la tabla project_members
+  //Comprueba si es miembro a través de la tabla project_members
   const memberQuery = `
     SELECT 1 FROM project_members
     WHERE project_id = $1 AND user_id = $2
@@ -18,11 +12,10 @@ async function isProjectMember(projectId, userId) {
   const memberResult = await pool.query(memberQuery, [projectId, userId]);
 
   if (memberResult.rowCount > 0) {
-    return true; // Es miembro (ej. un proyecto de workspace)
+    return true;
   }
 
-  // 2. Si no es miembro, comprueba si es el CREADOR del proyecto
-  // (Esto es crucial para los proyectos personales)
+  // Si no es miembro, comprueba si es el CREADOR del proyecto(Esto es crucial para los proyectos personales)
   const creatorQuery = `
     SELECT 1 FROM projects
     WHERE id = $1 AND created_by = $2
@@ -30,18 +23,12 @@ async function isProjectMember(projectId, userId) {
   const creatorResult = await pool.query(creatorQuery, [projectId, userId]);
 
   if (creatorResult.rowCount > 0) {
-    return true; // Es el creador (ej. un proyecto personal)
+    return true;
   }
-
   return false; // No es ninguna de las dos, acceso denegado
 }
 
-/**
- * Obtiene los detalles necesarios para los logs (nombres).
- * @param {string} actorId - ID del usuario que hace la acción.
- * @param {string} taskId - ID de la tarea afectada.
- * @returns {object} - { actorName, taskTitle }
- */
+/**Obtiene los detalles necesarios para los logs (nombres)*/
 async function getLogDetails(actorId, taskId) {
   let actorName = `Usuario (ID: ${actorId})`;
   let taskTitle = `Tarea (ID: ${taskId})`;
@@ -63,11 +50,7 @@ async function getLogDetails(actorId, taskId) {
   return { actorName, taskTitle };
 }
 
-// --- CRUD DE TAREAS ---
-
-/**
- * Crea una nueva tarea en un proyecto.
- */
+/**Crea una nueva tarea en un proyecto*/
 export async function createTask(taskData, actorId) {
   const {
     project_id,
@@ -79,7 +62,7 @@ export async function createTask(taskData, actorId) {
     due_date,
   } = taskData;
 
-  // Permiso: Solo miembros del proyecto pueden crear tareas.
+  // Solo miembros del proyecto pueden crear tareas.
   if (!(await isProjectMember(project_id, actorId))) {
     throw new Error("Permiso denegado para crear tareas en este proyecto.");
   }
@@ -105,11 +88,9 @@ export async function createTask(taskData, actorId) {
 
   // Bitácora
   if (newTask) {
-    // No necesitamos getLogDetails aquí, ya tenemos el nombre de la tarea
     logAction({
       userId: actorId,
       projectId: project_id,
-      // CORREGIDO: String simplificado
       action: `TASK_CREATED: "${newTask.title}"`,
     });
   }
@@ -117,12 +98,9 @@ export async function createTask(taskData, actorId) {
   return newTask;
 }
 
-/**
- * Obtiene todas las tareas de un proyecto.
- * Solo si el usuario es miembro del proyecto.
- */
+/**Obtiene todas las tareas de un proyecto Solo si el usuario es miembro del proyecto*/
 export async function getTasksByProjectId(projectId, actorId) {
-  // Permiso: Solo miembros del proyecto pueden ver las tareas.
+  //Solo miembros del proyecto pueden ver las tareas.
   if (!(await isProjectMember(projectId, actorId))) {
     return null; // El router interpretará null como "Acceso Denegado"
   }
@@ -142,9 +120,7 @@ export async function getTasksByProjectId(projectId, actorId) {
   return rows;
 }
 
-/**
- * Obtiene una tarea específica por su ID.
- * Solo si el usuario es miembro del proyecto.
+/**Obtiene una tarea específica por su ID Solo si el usuario es miembro del proyecto.
  */
 export async function getTaskById(taskId, actorId) {
   // Obtenemos la tarea y el project_id al mismo tiempo
@@ -155,8 +131,6 @@ export async function getTaskById(taskId, actorId) {
   if (taskResult.rowCount === 0) return null; // Tarea no encontrada
 
   const task = taskResult.rows[0];
-
-  // Permiso: ¿Es el actor miembro del proyecto al que pertenece esta tarea?
   if (!(await isProjectMember(task.project_id, actorId))) {
     return null; // Acceso Denegado
   }
@@ -164,11 +138,9 @@ export async function getTaskById(taskId, actorId) {
   return task;
 }
 
-/**
- * Actualiza el estado de una tarea (KANBAN).
- */
+/**Actualiza el estado de una tarea (KANBAN)*/
 export async function updateTaskStatus(taskId, status, actorId) {
-  // 1. Obtener la tarea para verificar permisos Y el estado anterior
+  //Obtener la tarea para verificar permisos Y el estado anterior
   const task = await getTaskById(taskId, actorId);
   if (!task) {
     throw new Error("Tarea no encontrada o acceso denegado.");
@@ -193,7 +165,7 @@ export async function updateTaskStatus(taskId, status, actorId) {
       RETURNING *
     `.trim();
   } else {
-    // Caso 3: Movimiento normal (ej. En Progreso -> En Revisión)
+    // Caso 3: Movimiento normal (por ejemplo En Progreso -> En Revisión)
     updateQuery = `
       UPDATE tasks 
       SET status = $2 
@@ -202,11 +174,11 @@ export async function updateTaskStatus(taskId, status, actorId) {
     `.trim();
   }
 
-  // 2. Ejecutar la consulta
+  // Ejecutar la consulta
   const { rows } = await pool.query(updateQuery, values);
   const updatedTask = rows[0];
 
-  // 3. Bitácora
+  // Bitácora
   if (updatedTask) {
     const { taskTitle } = await getLogDetails(null, taskId);
     logAction({
@@ -217,17 +189,15 @@ export async function updateTaskStatus(taskId, status, actorId) {
   }
   return updatedTask;
 }
-/**
- * Actualiza los campos generales de una tarea (título, desc, prioridad, etc.).
- */
+/** Actualiza los campos generales de una tarea (título, desc, prioridad, etc.)*/
 export async function updateTask(taskId, data, actorId) {
-  // 1. Verificar permisos
+  //  Verificar permisos
   const task = await getTaskById(taskId, actorId);
   if (!task) {
     throw new Error("Tarea no encontrada o acceso denegado.");
   }
 
-  // 2. Construir query dinámica
+  // Construir query dinámica
   const fields = [];
   const values = [];
   let index = 1;
@@ -248,8 +218,7 @@ export async function updateTask(taskId, data, actorId) {
     }
   }
 
-  // --- INICIO DE LA NUEVA LÓGICA (para completed_at) ---
-  // Comprobar si el 'status' se está actualizando
+  //LÓGICA para completed_at
   if (data.status !== undefined) {
     // Añadir el status al query
     fields.push(`status = $${index++}`);
@@ -264,7 +233,6 @@ export async function updateTask(taskId, data, actorId) {
       fields.push(`completed_at = NULL`);
     }
   }
-  // --- FIN DE LA NUEVA LÓGICA ---
 
   if (fields.length === 0) {
     return task; // No hay nada que actualizar
@@ -294,11 +262,9 @@ export async function updateTask(taskId, data, actorId) {
 
   return updatedTask;
 }
-/**
- * Elimina una tarea.
- */
+/**Elimina una tarea.*/
 export async function deleteTask(taskId, actorId) {
-  // 1. Obtener la tarea para saber a qué proyecto pertenece
+  // Obtener la tarea para saber a qué proyecto pertenece
   const taskQuery = `SELECT project_id, title FROM tasks WHERE id = $1`.trim();
   const taskResult = await pool.query(taskQuery, [taskId]);
   if (taskResult.rowCount === 0) {
@@ -311,13 +277,12 @@ export async function deleteTask(taskId, actorId) {
       "Permiso denegado. Solo un admin del proyecto puede eliminar tareas."
     );
   }
-  // 3. Si tiene permiso, eliminar la tarea
+  //Si tiene permiso, eliminar la tarea
   const deleteQuery = `DELETE FROM tasks WHERE id = $1 RETURNING *`.trim();
   const { rows } = await pool.query(deleteQuery, [taskId]);
 
-  // 4. Bitácora
+  // Bitácora
   if (rows.length > 0) {
-    // (No necesitamos actorName, logAction lo obtiene de 'userId')
     logAction({
       userId: actorId,
       projectId: task.project_id,
