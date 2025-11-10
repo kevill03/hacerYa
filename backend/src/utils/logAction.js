@@ -6,6 +6,8 @@ const ACTION_MESSAGES = {
   USER_REGISTERED: "creó su cuenta.",
   USER_LOGIN_SUCCESS: "Inició Sesión Satisfactoriamente.",
   USER_LOGOUT_SUCCESS: "Cerró Sesión.",
+  USER_LOGIN_FAILED_BLOCKED:
+    "Intentó iniciar sesión(Rechazada debido a tener su usuario bloqueado)",
 
   // PROYECTOS (Debe ser usado con el nombre del proyecto)
   CREATED_PROJECT: "creó el proyecto:",
@@ -28,6 +30,11 @@ const ACTION_MESSAGES = {
   TASK_DETAILS_UPDATED: `actualizó detalles de la tarea:`,
   TASK_DELETED: `eliminó la tarea:`,
   TASK_COMMENT_ADDED: `comentó en la tarea:`,
+
+  //Gestion de usuarios
+  ADMIN_STATUS_CHANGE: `cambió el estado de un usuario:`,
+  ADMIN_USER_EDIT: `editó los detalles de un usuario:`,
+  ADMIN_PASS_CHANGE: `cambió una contraseña:`,
 };
 
 /**Función de utilidad para registrar una acción en la bitácora (activity_log)*/

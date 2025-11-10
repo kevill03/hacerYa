@@ -4,6 +4,7 @@ import { apiRequest } from "./api.js";
 import { renderMemberModal } from "./workspaceMembers.js";
 import { renderProjectMemberModal } from "./projectMembers.js";
 import { renderAdminDashboard } from "./adminDashboard.js";
+import { renderAdminPanel } from "./adminPanel.js";
 //------------------------------------------------------------
 // Declaraciones de los DOS MODALES y sus elementos
 const createModal = document.querySelector(".createWindow"); // Modal de Creación
@@ -24,7 +25,7 @@ const mainContentArea = document.querySelector(".mainData");
 const sideBarButtons = document.querySelectorAll(".sideBarBtn");
 const subtitleElement = document.querySelector(".subtitle"); // Título principal (h1)
 const createActionButton = document.getElementById("createNavButton"); // Botón principal de acción superior
-
+const adminSections = document.querySelectorAll(".admin-link-hidden");
 //ESTADO GLOBAL DE LA APLICACIÓN
 export let appState = {
   currentWorkspaceId: null, // ID del workspace actualmente visible (null para Proyectos Personales)
@@ -399,6 +400,14 @@ const renderView = async (
       document.title = "Estadísticas | HacerYA";
       await renderAdminDashboard(mainContentArea);
       break;
+    case "admin-panel":
+      subtitleElement.textContent = "Gestión de Usuarios";
+      document.title = "Gestión de Usuarios | HacerYA";
+      createActionButton.style.display = "none";
+      btnChangeView.forEach((btn) => (btn.style.display = "none"));
+      // Llama al nuevo especialista
+      await renderAdminPanel(mainContentArea);
+      break;
     case "viewWorkspaceProjects":
       await renderProjects(workspaceId, workspaceName);
       break;
@@ -468,8 +477,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!parsedData || !parsedData.user)
       throw new Error("Formato de datos de usuario inválido.");
     appState.currentUser = parsedData.user;
+    if (adminSections.length > 0) {
+      adminSections.forEach((e) => {
+        e.style.display =
+          appState.currentUser.role === "admin" ? "flex" : "none";
+      });
+    }
   } catch (e) {
-    console.error("Error parsing user data, redirecting to login", e);
+    console.error(
+      "Error parseando datos de usuario, redirigiendo a la pagina de inicio de sesion",
+      e
+    );
     localStorage.clear();
     window.location.href = "login.html";
     return;
@@ -507,7 +525,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       viewToLoad = "workspaces"; // Cargar lista si el hash es solo #workspaces o inválido
       await renderView(viewToLoad);
     }
-  } else if (["workspaces", "admin-dashboard"].includes(initialHash)) {
+  } else if (
+    ["workspaces", "admin-dashboard", "admin-panel"].includes(initialHash)
+  ) {
     viewToLoad = initialHash;
     await renderView(viewToLoad);
   } else {
@@ -679,7 +699,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       await renderView(viewName);
       // Actualizar el hash solo si es una vista principal del sidebar
       if (
-        ["mis-proyectos", "workspaces", "admin-dashboard"].includes(viewName)
+        [
+          "mis-proyectos",
+          "workspaces",
+          "admin-dashboard",
+          "admin-panel",
+        ].includes(viewName)
       ) {
         window.history.pushState(null, "", "#" + viewName);
       }
@@ -797,7 +822,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         viewToLoad = "workspaces";
       }
-    } else if (["workspaces", "admin-dashboard"].includes(hash)) {
+    } else if (
+      ["workspaces", "admin-dashboard", "admin-panel"].includes(hash)
+    ) {
       viewToLoad = hash;
     }
     await renderView(viewToLoad, workspaceId, workspaceName);

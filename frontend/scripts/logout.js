@@ -1,30 +1,5 @@
 const logoutBtn = document.querySelector(".logoutBtn");
 
-window.addEventListener("load", () => {
-  const userData = localStorage.getItem("user");
-
-  // Verificación simple para evitar errores si no hay user
-  if (!userData) {
-    console.error(
-      "No se encontró usuario en localStorage. Redirigiendo a login."
-    );
-    // Si por alguna razón no hay usuario, forzamos la salida
-    localStorage.removeItem("token");
-    sessionStorage.clear();
-    window.location.replace("login.html");
-    return;
-  }
-
-  const stored = JSON.parse(userData);
-  const user = stored.user;
-  console.log("Usuario logueado:", user["full_name"]);
-
-  const adminLink = document.querySelector(".admin-link-hidden");
-  if (adminLink) {
-    adminLink.style.display = user.role === "admin" ? "flex" : "none";
-  }
-});
-
 logoutBtn.addEventListener("click", function () {
   Swal.fire({
     title: "¿Estás seguro?",
@@ -56,8 +31,6 @@ logoutBtn.addEventListener("click", function () {
           : PROD_API_URL;
 
       try {
-        console.log("LOGOUT: Token encontrado:", !!token);
-        console.log("LOGOUT: URL de destino:", logoutUrl);
         if (token) {
           const response = await fetch(logoutUrl, {
             method: "POST",
@@ -66,9 +39,6 @@ logoutBtn.addEventListener("click", function () {
               Authorization: `Bearer ${token}`,
             },
           });
-          console.log(
-            `LOGOUT: Servidor respondió con estado ${response.status}`
-          );
         }
       } catch (error) {
         console.error(

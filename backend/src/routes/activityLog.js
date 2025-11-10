@@ -4,9 +4,8 @@ import * as ActivityLogModel from "../../models/activityLog.js";
 
 const router = Router();
 
-// ----------------------------------------------------------------------
 // RUTA: OBTENER BITÁCORA GLOBAL (GET /activity-log)
-// ----------------------------------------------------------------------
+
 // 1. verifyToken (autentica al usuario)
 // 2. adminOnly (autoriza SÓLO si es admin)
 router.get("/", [verifyToken, adminOnly], async (req, res) => {

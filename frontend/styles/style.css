@@ -1253,3 +1253,184 @@ a.flexContainer {
   font-size: 0.8rem;
   color: #777;
 }
+
+/* --- Estilos de la seccion de gestión de usuarios --- */
+
+.admin-panel-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  gap: 20px;
+}
+
+.admin-panel-container h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+}
+.admin-panel-container p {
+  font-size: 1rem;
+  color: #555;
+  margin-top: -15px;
+}
+
+.admin-search-bar {
+  width: 100%;
+}
+#adminUserSearchInput {
+  width: 100%;
+  max-width: 600px;
+  height: 45px;
+  padding: 0 15px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#adminUserSearchInput:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(6, 9, 202, 0.2);
+}
+
+.user-table-container {
+  width: 100%;
+  overflow-y: auto;
+  flex-grow: 1;
+  min-height: 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.user-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-admin-table th,
+.user-admin-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.user-admin-table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  color: #333;
+  position: sticky; /* Encabezado fijo al hacer scroll */
+  top: 0;
+}
+.user-admin-table tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Estilos para el recuadro de estado y Rol */
+.status-pill {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+.status-pill.role-admin {
+  background-color: #e8dffc;
+  color: #640093;
+}
+.status-pill.role-user {
+  background-color: #f0f0f0;
+  color: #555;
+}
+.status-pill.status-active {
+  background-color: #e8f5e9;
+  color: #4caf50;
+}
+.status-pill.status-blocked {
+  background-color: #fbebee;
+  color: #dc3545;
+}
+
+/* 6. Botones de Acción en la Tabla */
+.user-actions .panelBtn {
+  margin: 0 5px 0 0;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 6px;
+}
+.user-actions .btn-edit-user {
+  background-color: #1a73e8;
+  color: white;
+}
+.user-actions .btn-change-pass {
+  background-color: #ffc107;
+  color: #333;
+}
+.user-actions .panelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- ESTILOS PARA EL FORMULARIO DEL MODAL DE EDICIÓN DE USUARIO --- */
+
+#adminEditForm {
+  gap: 1rem;
+}
+
+#adminEditForm .inputGroup {
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  gap: 5px;
+}
+
+#adminEditForm label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Estilos para los inputs y selects del modal de admin */
+#adminEditForm input[type="text"],
+#adminEditForm input[type="email"],
+#adminEditForm select {
+  width: 100%;
+  margin: 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px 12px;
+  height: 45px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  color: #333;
+}
+
+#adminEditForm input[type="text"]:focus,
+#adminEditForm input[type="email"]:focus,
+#adminEditForm select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(6, 9, 202, 0.2);
+}
+
+/* Fila de 2 columnas (para Rol y Estado) */
+#adminEditForm .input-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Botón de guardar */
+#adminEditForm button[type="submit"] {
+  margin-top: 1rem;
+  background-color: #026cf7;
+  color: white;
+}
