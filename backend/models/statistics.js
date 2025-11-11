@@ -1,14 +1,23 @@
 import { pool } from "../src/db.js";
 
-/** Obtiene los KPIs principales*/
+/** Obtiene los KPIs principales (excluyendo proyectos personales) */
 export async function getDashboardKPIs() {
   // Ejecutamos múltiples conteos simples en paralelo
   const userCountPromise = pool.query("SELECT COUNT(id) FROM users");
-  const projectCountPromise = pool.query("SELECT COUNT(id) FROM projects");
-  const workspaceCountPromise = pool.query("SELECT COUNT(id) FROM workspaces");
-  const tasksDonePromise = pool.query(
-    "SELECT COUNT(id) FROM tasks WHERE status = 'Hecho'"
+  // Contamos solo proyectos que NO son personales
+  const projectCountPromise = pool.query(
+    "SELECT COUNT(id) FROM projects WHERE is_personal = false"
   );
+
+  const workspaceCountPromise = pool.query("SELECT COUNT(id) FROM workspaces");
+
+  // Contamos solo tareas "Hechas" que pertenecen a proyectos NO personales
+  const tasksDonePromise = pool.query(`
+    SELECT COUNT(t.id) 
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE t.status = 'Hecho' AND p.is_personal = false
+  `);
 
   const [userRes, projectRes, workspaceRes, tasksDoneRes] = await Promise.all([
     userCountPromise,
@@ -25,51 +34,62 @@ export async function getDashboardKPIs() {
   };
 }
 
-/**Obtiene el conteo de tareas agrupadas por su estado (para un gráfico de dona)*/
+/** Obtiene el conteo de tareas agrupadas por su estado (excluyendo proyectos personales) */
 export async function getTasksByStatus() {
+  // Hacemos JOIN con projects para filtrar solo tareas de p.is_personal = false
   const query = `
-    SELECT status, COUNT(id) AS count
-    FROM tasks
-    GROUP BY status
-    ORDER BY status;
+    SELECT t.status, COUNT(t.id) AS count
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    WHERE p.is_personal = false
+    GROUP BY t.status
+    ORDER BY t.status;
   `.trim();
 
   const { rows } = await pool.query(query);
-  return rows; // Devuelve ej: [{status: 'Hecho', count: '5'}, {status: 'En progreso', count: '2'}]
+  return rows;
 }
 
-/**Obtiene el conteo de tareas por proyecto (para un gráfico de barras)*/
+/** Obtiene el conteo de tareas por proyecto (excluyendo proyectos personales) */
 export async function getTasksPerProject(limit = 10) {
+  // Añadimos "WHERE p.is_personal = false" para excluir esos proyectos de la lista
   const query = `
     SELECT 
       p.name, 
       COUNT(t.id) AS task_count
     FROM projects p
     JOIN tasks t ON p.id = t.project_id
+    WHERE p.is_personal = false
     GROUP BY p.name
     ORDER BY task_count DESC
     LIMIT $1;
   `.trim();
 
   const { rows } = await pool.query(query, [limit]);
-  return rows; // Devuelve ej: [{name: 'Campaña Black Friday', task_count: '8'}, ...]
+  return rows;
 }
 
-/**Obtiene los usuarios más activos (basado en la bitácora)*/
+/** Obtiene los usuarios más activos (excluyendo actividad de proyectos personales) */
 export async function getActiveUsers(limit = 5) {
+  // Hacemos LEFT JOIN con projects para excluir logs de proyectos personales.
+  // Mantenemos logs que no tienen project_id (como login o creación de workspace).
   const query = `
     SELECT 
       u.full_name,
       COUNT(al.id) AS action_count
     FROM activity_log al
     JOIN users u ON al.user_id = u.id
+    LEFT JOIN projects p ON al.project_id = p.id
+    WHERE 
+      p.is_personal = false -- Incluye logs de proyectos de workspace
+      OR al.project_id IS NULL -- Incluye logs que no son de proyecto (login, etc.)
     GROUP BY u.full_name
     ORDER BY action_count DESC
     LIMIT $1;
   `.trim();
 
   const { rows } = await pool.query(query, [limit]);
-  return rows; // Devuelve ej: [{full_name: 'Kevin Medina', action_count: '75'}, ...]
+  return rows;
 }
 
 /**Funcion que Obtiene los KPIs de carga de trabajo actual de un usuario específico*/
