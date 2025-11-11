@@ -1434,3 +1434,51 @@ a.flexContainer {
   background-color: #026cf7;
   color: white;
 }
+
+/* ---ESTILOS PARA EL FILTRO DEL DASHBOARD--- */
+
+.dashboard-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 20px 10px 20px;
+  border-bottom: 2px solid #eee;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.dashboard-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-filter label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+/*El Menú Desplegable (Select)*/
+#userFilterSelect {
+  height: 45px;
+  min-width: 250px; /* Ancho mínimo para que quepan los nombres */
+  padding: 0 12px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+#userFilterSelect:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(6, 9, 202, 0.2);
+}

@@ -3,7 +3,7 @@ name: Desplegar Frontend en GitHub Pages
 on:
   push:
     branches:
-      - main # O 'master' si usas esa
+      - main
 
 # Otorga permisos
 permissions:
@@ -23,7 +23,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
-      # 3. Sube el artefacto (tu carpeta 'frontend')
+      # 3. Sube el artefacto (en github pages solo se carga el frontend ya que el repositorio del backend es render)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -32,4 +32,4 @@ jobs:
       # 4. Despliega en GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # <-- ¡VERSIÓN ACTUALIZADA A v4!
+        uses: actions/deploy-pages@v4

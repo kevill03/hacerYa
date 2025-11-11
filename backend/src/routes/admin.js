@@ -9,7 +9,7 @@ const router = Router();
 // Nadie que no sea admin podrá acceder a /api/admin/*
 router.use(verifyToken, adminOnly);
 
-// --- RUTAS DEL DASHBOARD ---
+// --------------------- RUTAS DEL DASHBOARD ---------------------------
 
 // GET /api/admin/kpis
 router.get("/kpis", async (req, res) => {
@@ -61,8 +61,66 @@ router.get("/active-users", async (req, res) => {
     });
   }
 });
+// KPIs de un usuario (Activas, Vencidas)
+// GET /api/admin/stats/user/:userId/kpis
+router.get("/stats/user/:userId/kpis", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const kpis = await StatsModel.getUserKPIs(userId);
+    res.json(kpis);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al obtener KPIs de usuario",
+      error: error.message,
+    });
+  }
+});
 
-//Rutas para la gestion de usuarios
+// Distribución de tareas de un usuario (Para el grafico de Dona)
+// GET /api/admin/stats/user/:userId/tasks-by-status
+router.get("/stats/user/:userId/tasks-by-status", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const data = await StatsModel.getUserTasksByStatus(userId);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al obtener estados de tareas de usuario",
+      error: error.message,
+    });
+  }
+});
+
+// Finalización a tiempo vs. retraso (Para el grafico de Barras)
+// GET /api/admin/stats/user/:userId/completion-stats
+router.get("/stats/user/:userId/completion-stats", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const data = await StatsModel.getUserCompletionStats(userId);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al obtener estadísticas de finalización",
+      error: error.message,
+    });
+  }
+});
+
+// Tiempo de ciclo promedio
+// GET /api/admin/stats/user/:userId/lead-time
+router.get("/stats/user/:userId/lead-time", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const data = await StatsModel.getUserLeadTime(userId);
+    res.json(data);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error al obtener lead time", error: error.message });
+  }
+});
+
+//--------Rutas para la gestion de usuarios-------------
 
 // RUTA 1: OBTENER TODOS LOS USUARIOS
 // GET /api/admin/users
@@ -160,12 +218,10 @@ router.put("/users/:id/password", async (req, res) => {
     );
     res.json({ message: "Contraseña del usuario actualizada." });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error al cambiar la contraseña",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error al cambiar la contraseña",
+      error: error.message,
+    });
   }
 });
 
