@@ -195,12 +195,14 @@ main {
   margin-bottom: 20px;
 }
 
-.subtitle {
+.subtitle,
+.landingPageSubtitle {
   font-size: 40px;
   font-weight: 600;
+}
+.subtitle {
   margin-left: 1rem;
 }
-
 .loginDescription > .descriptionText {
   padding: 120px;
 }
