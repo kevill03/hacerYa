@@ -353,7 +353,6 @@ a.flexContainer {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   max-width: 600px;
   flex-direction: column;
-  gap: 20px;
   align-items: center;
 }
 .loginForm input {

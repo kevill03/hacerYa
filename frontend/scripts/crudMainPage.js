@@ -760,6 +760,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const response = await apiRequest(endpoint, method, payload); // 1. Renombra
 
         closeAnyWindow();
+        const successTitle =
+          submitAction === "edit" ? "¡Actualizado!" : "¡Creado!";
+        const successText = `El ${
+          itemType === "project" ? "proyecto" : "workspace"
+        } "${title}" ha sido guardado exitosamente.`;
+        Swal.fire(successTitle, successText, "success");
         console.log(
           `${submitAction === "edit" ? "Actualización" : "Creación"} exitosa:`,
           response.data
@@ -788,15 +794,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           appState.currentWorkspaceName
         );
       } catch (error) {
-        console.error(
-          `Error en ${
-            submitAction === "edit" ? "edición" : "creación"
-          } (${endpoint}):`,
-          error
-        );
-        alert(`Error: ${error.message}`);
+        const errorTitle = `Error en ${
+          submitAction === "edit" ? "edición" : "creación"
+        }`;
+        console.error(`${errorTitle} (${endpoint}):`, error);
+        Swal.fire(errorTitle, error.message, "error");
       } finally {
         submitCreateBtn.disabled = false;
+        submitCreateBtn.innerHTML = originalButtonHTML;
         appState.editingItem = null; // Resetear estado de edición
       }
     });
