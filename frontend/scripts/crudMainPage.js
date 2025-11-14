@@ -182,7 +182,7 @@ const renderProjects = async (workspaceId = null, workspaceName = null) => {
   appState.currentWorkspaceName = workspaceName;
   subtitleElement.textContent = isPersonalView
     ? "Mis Proyectos Personales"
-    : `${workspaceName} | Proyectos 📋`;
+    : `${workspaceName} | Proyectos`;
   document.title = `${subtitleElement.textContent} | HacerYA`;
 
   // Actualizar Botón de Acción Principal (Crear Proyecto)
