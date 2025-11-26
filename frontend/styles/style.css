@@ -25,6 +25,19 @@ body {
   white-space: nowrap;
   border-width: 0;
 }
+/*Normalizacion de campos desactivados*/
+textarea:disabled,
+select:disabled,
+input:disabled {
+  background-color: white;
+  opacity: 0.7;
+}
+
+textarea:disabled:hover,
+select:disabled:hover,
+input:disabled:hover {
+  cursor: not-allowed;
+}
 .flexContainer {
   display: flex;
 }
@@ -525,6 +538,8 @@ a.flexContainer {
   border: #ffffff solid 2px;
   border-radius: 5px;
   padding: 5px;
+  color: black;
+  font-size: 0.9rem;
 }
 #formTitle {
   margin-bottom: 1rem;
@@ -868,9 +883,9 @@ a.flexContainer {
   border-radius: 5px;
   padding: 5px;
   height: 45px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-family: "Poppins", sans-serif;
-  color: #333;
+  color: black;
 }
 
 #taskForm select:focus,
@@ -956,7 +971,6 @@ a.flexContainer {
   gap: 12px;
   flex-grow: 1;
   overflow-y: auto;
-  /*Linea escencial anadida el 06/11/2025 para que el scroll funcione correctamente */
   min-height: 0;
   padding: 5px;
 }
