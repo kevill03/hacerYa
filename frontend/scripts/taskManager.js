@@ -518,7 +518,7 @@ function populateComments(comments) {
   `
     )
     .join("");
-  commentsListEl.scrollTop = commentsListEl.scrollHeight;
+  commentsListEl.scrollTop = 0;
 }
 
 /**Maneja el envío del formulario de nuevo comentario*/
@@ -556,9 +556,10 @@ async function handleCommentSubmit(e, projectId, taskId) {
       commentsListEl.innerHTML = "";
     }
 
-    commentsListEl.innerHTML += commentHTML;
+    //commentsListEl.innerHTML += commentHTML;
+    commentsListEl.insertAdjacentHTML("afterbegin", commentHTML);
     commentInput.value = ""; // Limpiar el input
-    commentsListEl.scrollTop = commentsListEl.scrollHeight;
+    commentsListEl.scrollTop = 0;
   } catch (error) {
     console.error("Error al publicar comentario:", error);
     Swal.fire(

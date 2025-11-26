@@ -13,7 +13,7 @@ export async function getCommentsByTaskId(taskId) {
     FROM task_comments tc
     JOIN users u ON tc.user_id = u.id
     WHERE tc.task_id = $1
-    ORDER BY tc.created_at ASC;
+    ORDER BY tc.created_at DESC;
   `.trim();
 
   const { rows } = await pool.query(query, [taskId]);
