@@ -398,6 +398,7 @@ const renderView = async (
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
       subtitleElement.textContent = "Estadísticas";
       document.title = "Estadísticas | HacerYA";
+      if (mainContentArea.classList.contains("gridContainer")) changeView();
       await renderAdminDashboard(mainContentArea);
       break;
     case "admin-panel":
@@ -405,6 +406,7 @@ const renderView = async (
       document.title = "Gestión de Usuarios | HacerYA";
       createActionButton.style.display = "none";
       btnChangeView.forEach((btn) => (btn.style.display = "none"));
+      if (mainContentArea.classList.contains("gridContainer")) changeView();
       // Llama al nuevo especialista
       await renderAdminPanel(mainContentArea);
       break;

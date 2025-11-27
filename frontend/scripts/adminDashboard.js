@@ -49,7 +49,6 @@ export async function renderAdminDashboard(container) {
   }
 }
 
-// --- NUEVA FUNCIÓN ---
 /**Funcion que escucha los cambios en el dropdown y dispara la recarga de datos*/
 async function handleFilterChange(e) {
   const selectedValue = e.target.value;
