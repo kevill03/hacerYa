@@ -3,6 +3,7 @@ import * as TaskModel from "../../models/task.js";
 import { verifyToken } from "../middleware/auth.js";
 import * as ProjectModel from "../../models/project.js";
 import commentsRouter from "./comments.js";
+import { pool } from "../db.js";
 // mergeParams: true permite a este router acceder al :id de /projects/:id
 const router = Router({ mergeParams: true });
 
@@ -137,24 +138,47 @@ router.put("/:taskId", async (req, res) => {
   const actorId = req.userId;
   const { id: projectId } = req.params;
   try {
-    // Verificamos si el usuario está intentando cambiar la fecha de entrega
+    // SE VALIDA SOLO SI LA FECHA CAMBIA REALMENTE
+
     if (dataToUpdate.due_date !== undefined) {
-      // Si es así, verificamos si tiene rol de 'admin' en el proyecto
-      // (Usamos la función que ya existe en models/project.js)
-      const hasPermission = await ProjectModel.isProjectAdminOrCreator(
-        projectId,
-        actorId
+      // 1. Obtener la fecha actual de la base de datos
+      const currentTaskRes = await pool.query(
+        "SELECT due_date FROM tasks WHERE id = $1",
+        [taskId]
       );
 
-      if (!hasPermission) {
-        return res.status(403).json({
-          message:
-            "Permiso denegado. Solo un administrador del proyecto puede cambiar la fecha de entrega.",
-        });
+      if (currentTaskRes.rowCount === 0) {
+        return res.status(404).json({ message: "Tarea no encontrada." });
       }
+
+      const currentTask = currentTaskRes.rows[0];
+
+      // 2. Normalizar las fechas para compararlas (formato YYYY-MM-DD o null)
+      // (Esto evita errores por formatos de hora o zonas horarias)
+      const incomingDate = dataToUpdate.due_date
+        ? new Date(dataToUpdate.due_date).toISOString().split("T")[0]
+        : null;
+
+      const dbDate = currentTask.due_date
+        ? new Date(currentTask.due_date).toISOString().split("T")[0]
+        : null;
+
+      // 3. Comparar: ¿Son diferentes?
+      if (incomingDate !== dbDate) {
+        // SI, ESTÁN CAMBIANDO LA FECHA SE VERIFICAN PERMISOS DE ADMIN
+        const hasPermission = await ProjectModel.isProjectAdminOrCreator(
+          projectId,
+          actorId
+        );
+        if (!hasPermission) {
+          return res.status(403).json({
+            message:
+              "Permiso denegado. Solo un administrador del proyecto puede cambiar la fecha de entrega.",
+          });
+        }
+      }
+      // Si son iguales, ignoramos la validación y dejamos pasar (permitiendo editar título, etc.)
     }
-    /*Si pasó el chequeo (o no estaba cambiando la fecha)llamamos a la función normal del modelo.
-    (TaskModel.updateTask ya verifica que el usuario sea al menos 'miembro')*/
     const updatedTask = await TaskModel.updateTask(
       taskId,
       dataToUpdate,
